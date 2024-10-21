@@ -22,10 +22,11 @@ const Map = ({ setAddress }) => {
 
   const LocationMarker = () => {
     useMapEvents({
-      click(e) {
+      // Cambiar 'click' a 'pointerdown' para utilizar la nueva API
+      pointerdown(e) {
         const { lat, lng } = e.latlng;
         setMarkerPosition([lat, lng]);
-        setAddress(`Lat: ${lat.toFixed(4)}, Lng: ${lng.toFixed(4)}`);
+        setAddress(lat, lng); // Actualizar latitud y longitud
       },
     });
     return null;
@@ -34,7 +35,7 @@ const Map = ({ setAddress }) => {
   const handleMarkerDragEnd = (e) => {
     const { lat, lng } = e.target.getLatLng();
     setMarkerPosition([lat, lng]);
-    setAddress(`Lat: ${lat.toFixed(4)}, Lng: ${lng.toFixed(4)}`);
+    setAddress(lat, lng); // Actualizar latitud y longitud
   };
 
   return (

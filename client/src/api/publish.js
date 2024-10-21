@@ -1,4 +1,5 @@
 import Cookies from "js-cookie";
+import { toast } from "react-hot-toast";
 
 const API_URL = "http://localhost:4000/publications";
 
@@ -61,9 +62,11 @@ export const createPublication = async (formData) => {
       body: formData, // Envía formData directamente
     });
     if (!response.ok) await handleFetchError(response);
+    toast.success("¡Publicación creada exitosamente!"); // Mensaje de éxito
     return await response.json();
   } catch (error) {
     console.error("Error creating publication:", error);
+    toast.error("Error al crear la publicación"); // Mensaje de error
     throw error;
   }
 };

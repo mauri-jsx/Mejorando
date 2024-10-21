@@ -31,7 +31,7 @@ app.use(
   })
 );
 
-// Configuración de las sesiones
+
 app.use(
   session({
     secret: SECRET_KEY,
@@ -40,12 +40,11 @@ app.use(
     cookie: {
       secure: false,
       httpOnly: true,
-      sameSite: "None",
+      sameSite: "Lax",
     },
   })
 );
 
-// Configuración de fileUpload con límites aumentados
 app.use(
   fileUpload({
     useTempFiles: true,

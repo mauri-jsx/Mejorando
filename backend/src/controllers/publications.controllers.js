@@ -57,9 +57,14 @@ export const postFinderById = async (req, res) => {
 
 export const postCreator = async (req, res) => {
   try {
-    const { title, description, lat, long, category, startDate, endDate } =
-      req.body;
+    const { titles, descriptions, category, startDates, endDates } = req.body;
+    const { lat, long } = JSON.parse(req.body.locations);
+
     const idUser = req.user._id;
+
+    if (!titles || !descriptions || !lat || !long || !category || !startDates || !endDates) {
+      return res.status(400).json({ message: "Faltan campos obligatorios" });
+    }
 
     const mediaFiles = req.files?.media || [];
     const photos = [];
@@ -77,39 +82,30 @@ export const postCreator = async (req, res) => {
       }
     }
 
-    const newPublications = new publications({
-      titles: title,
+    const newPublication = new publications({
+      titles,
       idUsers: idUser,
-      descriptions: description,
+      descriptions,
       locations: { lat, long },
       categorys: category,
-      startDates: startDate,
-      endDates: endDate,
+      startDates,
+      endDates,
+      medias: {
+        photos,
+        videos,
+      },
     });
 
-    newPublications.medias.photos.push(...photos);
-    newPublications.medias.videos.push(...videos);
+    await newPublication.save();
 
-    await newPublications.save();
     for (const file of mediaFiles) {
       await fs.unlink(file.tempFilePath);
     }
 
-    return res.status(200).json({ message: "Post created successfully" });
+    return res.status(200).json({ message: "Publicación creada exitosamente" });
   } catch (error) {
-    console.log(
-      color.blue("-----------------------------------------------------------")
-    );
-    console.log(
-      color.red("Error en el controlador de creación de publicaciones")
-    );
-    console.log(
-      color.blue("-----------------------------------------------------------")
-    );
-    console.log(error);
-    return res
-      .status(500)
-      .json({ message: "Error inesperado en el servidor. Intente más tarde" });
+    console.error("Error al crear la publicación", error);
+    return res.status(500).json({ message: "Error inesperado en el servidor. Intente más tarde" });
   }
 };
 
