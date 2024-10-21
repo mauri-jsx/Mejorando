@@ -15,29 +15,45 @@ import reqRouter from "./routers/request.routes.js";
 const app = express();
 
 // Middlewares
-app.use(express.json());
+app.use(express.json({ limit: "50mb" }));
+app.use(express.urlencoded({ limit: "50mb", extended: true }));
 app.use(morgan("dev"));
 app.use(
   cors({
-    origin: ["http://localhost:5500", "http://localhost:3000", "http://127.0.0.1:3000", "http://localhost:5173"],
+    origin: [
+      "http://localhost:5500",
+      "http://localhost:3000",
+      "http://127.0.0.1:3000",
+      "http://localhost:5173",
+    ],
     credentials: true,
     methods: ["GET", "POST", "PUT", "DELETE"],
   })
 );
 
 // Configuración de las sesiones
-app.use(session({
-  secret: SECRET_KEY,
-  resave: false,
-  saveUninitialized: true,
-  cookie: {
-    secure: IS_PRODUCTION,
-    httpOnly: true,
-    sameSite: IS_PRODUCTION ? "None" : "Lax"
-  }
-}));
+app.use(
+  session({
+    secret: SECRET_KEY,
+    resave: false,
+    saveUninitialized: true,
+    cookie: {
+      secure: false,
+      httpOnly: true,
+      sameSite: "None",
+    },
+  })
+);
 
-app.use(fileUpload({ useTempFiles: true, tempFileDir: "./src/uploads", cleanup: true }));
+// Configuración de fileUpload con límites aumentados
+app.use(
+  fileUpload({
+    useTempFiles: true,
+    tempFileDir: "./src/uploads",
+    limits: { fileSize: 50 * 1024 * 1024 },
+    cleanup: true,
+  })
+);
 app.use(cookieParser());
 
 // Rutas

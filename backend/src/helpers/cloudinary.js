@@ -12,6 +12,13 @@ export const uploadImage = async (filesPath) => {
   return await cloudinary.uploader.upload(filesPath, {
     folder: "imagenProyect",
     resource_type: "image",
+    transformation: [
+      {
+        width: 500,
+        height: 500,
+        crop: "fill",
+      },
+    ],
   });
 };
 

@@ -5,6 +5,7 @@ import { logoutUser } from "../api/auth";
 
 const Home = () => {
   const navigate = useNavigate();
+
   const handleLogout = async () => {
     try {
       const response = await logoutUser();
@@ -28,6 +29,11 @@ const Home = () => {
       console.error("Error durante el logout:", error);
       toast.error("Error de conexión");
     }
+  };
+
+  // Maneja la redirección a la página de Publicar
+  const handlePublishRedirect = () => {
+    navigate("/publish");
   };
 
   return (
@@ -70,6 +76,21 @@ const Home = () => {
                 Bienvenido a ViewsEvent
               </h2>
             </div>
+          </motion.div>
+
+          {/* Nueva sección para redirigir a la página de publicar */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5 }}
+            className="mt-8 flex justify-center"
+          >
+            <button
+              onClick={handlePublishRedirect}
+              className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
+            >
+              Ir a Publicar
+            </button>
           </motion.div>
         </div>
       </main>
