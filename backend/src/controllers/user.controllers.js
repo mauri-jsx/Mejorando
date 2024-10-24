@@ -202,42 +202,42 @@ export const logout = (req, res) => {
 export const profileUpdater = async (req, res) => {
   try {
     const { id } = req.user;
-
     const { email, username } = req.body;
 
-    const searchEmail = await user.find({ emails: email }).exec();
+    // Crear objeto para los campos actualizados
+    let updatedFields = {};
 
-    if (!searchEmail.length === 0)
-      return res
-        .status(406)
-        .json({ message: "usuario ya existe con ese email" });
+    if (email) {
+      const searchEmail = await user.find({ emails: email }).exec();
+      if (searchEmail.length > 0) {
+        return res
+          .status(406)
+          .json({ message: "Usuario ya existe con ese email" });
+      }
+      updatedFields.emails = email;
+    }
 
-    const searchUsername = await user.find({ usernames: username }).exec();
-
-    if (!searchUsername === 0)
-      return res
-        .status(406)
-        .json({ message: "usuario ya existe con ese nombre de usuario " });
-
-    let updatedFields = { emails: email, usernames: username }; // Campos a actualizar
+    if (username) {
+      const searchUsername = await user.find({ usernames: username }).exec();
+      if (searchUsername.length > 0) {
+        return res
+          .status(406)
+          .json({ message: "Usuario ya existe con ese nombre de usuario" });
+      }
+      updatedFields.usernames = username;
+    }
 
     if (req.files?.media) {
       const media = req.files.media;
-
-      if (media.mimetype !== "image/jpeg" && media.mimetype !== "image/png")
-        return res
-          .status(400)
-          .json({ message: "el formato de imágenes es invalido" });
-
+      if (media.mimetype !== "image/jpeg" && media.mimetype !== "image/png") {
+        return res.status(400).json({ message: "Formato de imagen no válido" });
+      }
       const rout = media.tempFilePath;
-
       const result = await uploadImage(rout);
-
       updatedFields.profilePicture = {
         _id: result.public_id,
         url: result.secure_url,
-      }; // Agrega la imagen al objeto de actualización
-
+      };
       fs.unlink(rout);
     }
 
@@ -247,78 +247,46 @@ export const profileUpdater = async (req, res) => {
       { new: true }
     );
 
-    if (!userUpdated)
-      return res.status(404).json({
-        message: "no se pudo realizar la actualización de su usuario ",
-      });
+    if (!userUpdated) {
+      return res
+        .status(404)
+        .json({ message: "No se pudo actualizar el usuario" });
+    }
 
     return res.status(200).json({
-      message: "perfil actualizado con éxito",
+      message: "Perfil actualizado con éxito",
       profilePicture: userUpdated.profilePicture,
     });
   } catch (error) {
-    console.log(
-      color.blue(
-        "----------------------------------------------------------------------------------------------------"
-      )
-    );
-    console.log(
-      color.red(
-        "                   Error en el controlador de actualización de usuario"
-      )
-    );
-    console.log(
-      color.blue(
-        "----------------------------------------------------------------------------------------------------"
-      )
-    );
-    console.log();
-    console.error(error);
-    console.log();
-    console.log(
-      color.blue(
-        "----------------------------------------------------------------------------------------------------"
-      )
-    );
+    console.error("Error en el controlador de actualización de usuario", error);
     return res
       .status(500)
-      .json({ message: "Error inesperado por favor intente mas tarde" });
+      .json({ message: "Error inesperado, intente más tarde" });
   }
 };
 
-export const getProfiles = async (req, res) => {
+export const getLoggedUser = async (req, res) => {
   try {
-    const { id } = req.user;
-    const searchUser = await user
+    const { id } = req.user; // Asumiendo que ya has verificado el token y tienes el `id` del usuario
+
+    const userLogged = await user
       .findById(id)
-      .populate({ path: "publications" });
-    return res.status(200).json(searchUser);
+      .select("username email profilePicture")
+      .exec();
+
+    if (!userLogged) {
+      return res.status(404).json({ message: "Usuario no encontrado" });
+    }
+
+    return res.status(200).json({
+      username: userLogged.username,
+      email: userLogged.email,
+      profilePicture: userLogged.profilePicture,
+    });
   } catch (error) {
-    console.log(
-      color.blue(
-        "----------------------------------------------------------------------------------------------------"
-      )
-    );
-    console.log(
-      color.red(
-        "                   Error en el controlador de traer perfiles  de usuario"
-      )
-    );
-    console.log(
-      color.blue(
-        "----------------------------------------------------------------------------------------------------"
-      )
-    );
-    console.log();
-    console.error(error);
-    console.log();
-    console.log(
-      color.blue(
-        "----------------------------------------------------------------------------------------------------"
-      )
-    );
+    console.error("Error al obtener el usuario logueado:", error);
     return res
       .status(500)
-      .json({ message: "Error inesperado por favor intente mas tarde" });
+      .json({ message: "Error al obtener el usuario logueado" });
   }
 };

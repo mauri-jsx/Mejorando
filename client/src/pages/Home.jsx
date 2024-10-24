@@ -1,305 +1,368 @@
-import { useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import { useNavigate } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { motion } from "framer-motion";
+import { Link, useNavigate } from "react-router-dom";
+import { Edit2, LogOut, Plus, Camera } from "lucide-react";
+import { updateProfilePicture, getLoggedUser, logoutUser } from "../api/auth";
+import { fetchAllPublications } from "../api/publish";
 import { toast, Toaster } from "react-hot-toast";
-import {
-  Calendar,
-  Clock,
-  MapPin,
-  Users,
-  Plus,
-  LogOut,
-  Music,
-  Users2,
-  Theater,
-  Heart,
-} from "lucide-react";
-import { logoutUser } from "../api/auth";
 
 const Home = () => {
-  const navigate = useNavigate();
+  const [email, setEmail] = useState("");
+  const [username, setUsername] = useState("");
+  const [profilePicture, setProfilePicture] = useState(null);
+  const [previewImage, setPreviewImage] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [loggedUser, setLoggedUser] = useState(null);
+  const [publications, setPublications] = useState([]);
+  const [loadingPublications, setLoadingPublications] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState("all");
+  const [isEditing, setIsEditing] = useState(false);
 
-  const user = {
-    name: "Juan Pérez",
-    profilePic: "/api/placeholder/150/150",
-    email: "juan.perez@example.com",
-    eventsCreated: 12,
-    eventsAttending: 5,
+  const navigate = useNavigate();
+
+  const categories = [
+    { id: "musical", name: "Eventos Musicales", icon: "🎵" },
+    { id: "charity", name: "Eventos Caritativos", icon: "💝" },
+    { id: "cultural", name: "Eventos Culturales", icon: "🎨" },
+    { id: "social", name: "Eventos Sociales", icon: "🎉" },
+  ];
+
+  useEffect(() => {
+    fetchUser();
+    fetchPublications();
+  }, []);
+
+  const fetchUser = async () => {
+    try {
+      const userData = await getLoggedUser();
+      setLoggedUser(userData);
+      setEmail(userData.email);
+      setUsername(userData.username);
+      setPreviewImage(userData.profilePicture?.url || "/default-profile.png");
+    } catch (error) {
+      console.error("Error al obtener el usuario:", error);
+    }
   };
 
-  // Categorías actualizadas según especificación
-  const categories = [
-    { id: "all", name: "Todos", icon: Users2 },
-    { id: "musical", name: "Musicales", icon: Music },
-    { id: "social", name: "Sociales", icon: Users },
-    { id: "cultural", name: "Culturales", icon: Theater },
-    { id: "charity", name: "Caritativos", icon: Heart },
-  ];
+  const fetchPublications = async () => {
+    setLoadingPublications(true);
+    try {
+      const data = await fetchAllPublications();
+      setPublications(data);
+    } catch (error) {
+      toast.error("Error al cargar publicaciones");
+    } finally {
+      setLoadingPublications(false);
+    }
+  };
 
-  // Sample featured events data con las nuevas categorías
-  const featuredEvents = [
-    {
-      id: 1,
-      title: "Festival de Rock Nacional",
-      date: "2024-06-15",
-      time: "18:00",
-      location: "Estadio Central",
-      category: "musical",
-      attendees: 230,
-      image: "/api/placeholder/400/200",
-    },
-    {
-      id: 2,
-      title: "Gala Benéfica Anual",
-      date: "2024-06-20",
-      time: "20:00",
-      location: "Hotel Diplomatic",
-      category: "charity",
-      attendees: 150,
-      image: "/api/placeholder/400/200",
-    },
-    {
-      id: 3,
-      title: "Exposición de Arte Local",
-      date: "2024-06-25",
-      time: "10:00",
-      location: "Centro Cultural",
-      category: "cultural",
-      attendees: 80,
-      image: "/api/placeholder/400/200",
-    },
-    {
-      id: 4,
-      title: "Fiesta de Networking",
-      date: "2024-06-30",
-      time: "19:00",
-      location: "Business Center",
-      category: "social",
-      attendees: 120,
-      image: "/api/placeholder/400/200",
-    },
-  ];
+  const handleProfilePictureChange = (e) => {
+    const file = e.target.files[0];
+    setProfilePicture(file);
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => setPreviewImage(reader.result);
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    const formData = new FormData();
+    if (email !== loggedUser.email) formData.append("email", email);
+    if (username !== loggedUser.username) formData.append("username", username);
+    if (profilePicture) formData.append("media", profilePicture);
+
+    try {
+      await updateProfilePicture(formData);
+      toast.success("Perfil actualizado exitosamente");
+      setIsEditing(false);
+    } catch (error) {
+      toast.error("Error al actualizar el perfil");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleLogout = async () => {
     try {
       const response = await logoutUser();
       if (response.success) {
         toast.success("Sesión cerrada exitosamente");
-        document.cookie =
-          "authToken=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
-        setTimeout(() => {
-          navigate("/login");
-        }, 2000);
-      } else {
-        toast.error(response.message || "Error al cerrar sesión");
+        setTimeout(() => navigate("/login"), 1500);
       }
     } catch (error) {
-      console.error("Error durante el logout:", error);
-      toast.error("Error de conexión");
+      toast.error("Error al cerrar sesión");
     }
   };
 
-  const filteredEvents =
+  const filteredPublications =
     selectedCategory === "all"
-      ? featuredEvents
-      : featuredEvents.filter((event) => event.category === selectedCategory);
-
-  const getCategoryColor = (category) => {
-    const colors = {
-      musical: "from-pink-500 to-rose-500",
-      social: "from-blue-500 to-cyan-500",
-      cultural: "from-purple-500 to-indigo-500",
-      charity: "from-green-500 to-emerald-500",
-      all: "from-gray-500 to-slate-500",
-    };
-    return colors[category] || colors.all;
-  };
+      ? publications
+      : publications.filter((pub) => pub.category === selectedCategory);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
-      <Toaster position="top-center" />
+    <div className="min-h-screen bg-gray-50">
+      <Toaster position="top-right" />
 
-      {/* Header con navegación */}
+      {/* Navbar */}
       <motion.nav
         initial={{ y: -100 }}
         animate={{ y: 0 }}
-        className="bg-white shadow-lg"
+        className="bg-white shadow-md px-8 py-4 flex justify-between items-center"
       >
-        <div className="max-w-7xl mx-auto px-4 py-3 flex justify-between items-center">
-          <motion.h1
-            className="text-3xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent"
+        <motion.h1
+          className="text-2xl font-bold bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent"
+          whileHover={{ scale: 1.05 }}
+        >
+          ViewsEvents
+        </motion.h1>
+        <div className="flex items-center gap-4">
+          <motion.button
             whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            onClick={() => navigate("/publish")}
+            className="bg-gradient-to-r from-purple-600 to-blue-600 text-white px-4 py-2 rounded-lg flex items-center gap-2"
           >
-            ViewsEvent
-          </motion.h1>
+            <Plus size={20} />
+            Crear Publicación
+          </motion.button>
           <motion.button
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
             onClick={handleLogout}
-            className="flex items-center gap-2 px-4 py-2 rounded-full bg-gradient-to-r from-red-500 to-pink-500 text-white hover:from-red-600 hover:to-pink-600 transition-all"
+            className="bg-red-500 text-white px-4 py-2 rounded-lg flex items-center gap-2"
           >
-            <LogOut size={18} />
-            Cerrar sesión
+            <LogOut size={20} />
+            Cerrar Sesión
           </motion.button>
         </div>
       </motion.nav>
 
-      <div className="max-w-7xl mx-auto px-4 py-8 flex gap-8">
-        {/* Sidebar con perfil */}
-        <motion.aside
-          initial={{ x: -100, opacity: 0 }}
-          animate={{ x: 0, opacity: 1 }}
-          className="w-72 flex-shrink-0"
-        >
-          <div className="bg-white rounded-2xl shadow-xl p-6 sticky top-8">
-            <div className="flex flex-col items-center">
-              <motion.img
-                src={user.profilePic}
-                alt="Profile"
-                className="w-24 h-24 rounded-full ring-4 ring-indigo-100"
-                whileHover={{ scale: 1.1 }}
-              />
-              <motion.h2
-                className="mt-4 text-xl font-semibold text-gray-800"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ delay: 0.2 }}
-              >
-                {user.name}
-              </motion.h2>
-              <p className="text-gray-500 text-sm">{user.email}</p>
-
-              <div className="w-full mt-6 grid grid-cols-2 gap-4">
-                <div className="text-center p-3 bg-indigo-50 rounded-lg">
-                  <p className="text-2xl font-bold text-indigo-600">
-                    {user.eventsCreated}
-                  </p>
-                  <p className="text-sm text-gray-600">Creados</p>
-                </div>
-                <div className="text-center p-3 bg-purple-50 rounded-lg">
-                  <p className="text-2xl font-bold text-purple-600">
-                    {user.eventsAttending}
-                  </p>
-                  <p className="text-sm text-gray-600">Asistiendo</p>
-                </div>
+      <div className="container mx-auto px-4 py-8">
+        <div className="flex flex-col lg:flex-row gap-8">
+          {/* Profile Card */}
+          <motion.div
+            initial={{ x: -100, opacity: 0 }}
+            animate={{ x: 0, opacity: 1 }}
+            className="lg:w-1/3"
+          >
+            <div className="bg-white rounded-xl shadow-lg p-6">
+              <div className="relative mb-6">
+                <img
+                  src={previewImage || "/default-profile.png"}
+                  alt="Profile"
+                  className="w-32 h-32 rounded-full mx-auto object-cover"
+                />
+                {isEditing && (
+                  <label
+                    htmlFor="profilePicture"
+                    className="absolute bottom-0 right-1/3 cursor-pointer"
+                  >
+                    <motion.div
+                      whileHover={{ scale: 1.1 }}
+                      className="bg-purple-600 text-white p-2 rounded-full"
+                    >
+                      <Camera size={20} />
+                    </motion.div>
+                    <input
+                      id="profilePicture"
+                      type="file"
+                      accept="image/*"
+                      onChange={handleProfilePictureChange}
+                      className="hidden"
+                    />
+                  </label>
+                )}
               </div>
 
-              <motion.button
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                onClick={() => navigate("/publish")}
-                className="mt-6 w-full py-3 rounded-lg bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-medium flex items-center justify-center gap-2 hover:from-indigo-700 hover:to-purple-700"
-              >
-                <Plus size={20} />
-                Crear Evento
-              </motion.button>
-            </div>
-          </div>
-        </motion.aside>
-
-        {/* Contenido principal */}
-        <div className="flex-1">
-          {/* Categorías */}
-          <motion.div
-            initial={{ y: 20, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            className="mb-8"
-          >
-            <h2 className="text-2xl font-bold text-gray-800 mb-4">
-              Explorar Eventos
-            </h2>
-            <div className="flex gap-2 overflow-x-auto pb-2">
-              {categories.map((category) => {
-                const Icon = category.icon;
-                return (
-                  <motion.button
-                    key={category.id}
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                    onClick={() => setSelectedCategory(category.id)}
-                    className={`px-4 py-2 rounded-full flex items-center gap-2 ${
-                      selectedCategory === category.id
-                        ? `bg-gradient-to-r ${getCategoryColor(
-                            category.id
-                          )} text-white`
-                        : "bg-white text-gray-600 hover:bg-gray-50"
-                    } transition-all`}
-                  >
-                    <Icon size={18} />
-                    {category.name}
-                  </motion.button>
-                );
-              })}
-            </div>
-          </motion.div>
-
-          {/* Grid de eventos */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <AnimatePresence mode="wait">
-              {filteredEvents.map((event) => (
-                <motion.div
-                  key={event.id}
-                  layout
-                  initial={{ opacity: 0, scale: 0.9 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  exit={{ opacity: 0, scale: 0.9 }}
-                  whileHover={{ y: -5 }}
-                  className="bg-white rounded-xl shadow-lg overflow-hidden"
-                >
-                  <img
-                    src={event.image}
-                    alt={event.title}
-                    className="w-full h-48 object-cover"
+              {isEditing ? (
+                <form onSubmit={handleSubmit} className="space-y-4">
+                  <input
+                    type="text"
+                    value={username}
+                    onChange={(e) => setUsername(e.target.value)}
+                    className="w-full px-4 py-2 rounded-lg border focus:ring-2 focus:ring-purple-500"
+                    placeholder="Nombre de usuario"
                   />
-                  <div className="p-6">
-                    <div className="flex justify-between items-start mb-4">
-                      <h3 className="text-xl font-semibold text-gray-800">
-                        {event.title}
-                      </h3>
-                      <span
-                        className={`px-3 py-1 rounded-full text-xs font-medium bg-gradient-to-r ${getCategoryColor(
-                          event.category
-                        )} text-white`}
-                      >
-                        {
-                          categories.find((cat) => cat.id === event.category)
-                            ?.name
-                        }
-                      </span>
-                    </div>
-                    <div className="space-y-2">
-                      <div className="flex items-center text-gray-600">
-                        <Calendar size={18} className="mr-2" />
-                        {event.date}
-                      </div>
-                      <div className="flex items-center text-gray-600">
-                        <Clock size={18} className="mr-2" />
-                        {event.time}
-                      </div>
-                      <div className="flex items-center text-gray-600">
-                        <MapPin size={18} className="mr-2" />
-                        {event.location}
-                      </div>
-                      <div className="flex items-center text-gray-600">
-                        <Users size={18} className="mr-2" />
-                        {event.attendees} asistentes
-                      </div>
-                    </div>
+                  <input
+                    type="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    className="w-full px-4 py-2 rounded-lg border focus:ring-2 focus:ring-purple-500"
+                    placeholder="Email"
+                  />
+                  <div className="flex gap-2">
                     <motion.button
                       whileHover={{ scale: 1.05 }}
                       whileTap={{ scale: 0.95 }}
-                      className={`mt-4 w-full py-2 rounded-lg bg-gradient-to-r ${getCategoryColor(
-                        event.category
-                      )} text-white font-medium`}
+                      type="submit"
+                      disabled={loading}
+                      className="flex-1 bg-purple-600 text-white py-2 rounded-lg"
                     >
-                      Ver detalles
+                      {loading ? "Guardando..." : "Guardar"}
+                    </motion.button>
+                    <motion.button
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
+                      type="button"
+                      onClick={() => setIsEditing(false)}
+                      className="flex-1 bg-gray-200 text-gray-800 py-2 rounded-lg"
+                    >
+                      Cancelar
                     </motion.button>
                   </div>
-                </motion.div>
+                </form>
+              ) : (
+                <div className="text-center">
+                  <h2 className="text-xl font-semibold mb-2">{username}</h2>
+                  <p className="text-gray-600 mb-4">{email}</p>
+                  <motion.button
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    onClick={() => setIsEditing(true)}
+                    className="text-purple-600 flex items-center gap-2 mx-auto"
+                  >
+                    <Edit2 size={16} />
+                    Editar Perfil
+                  </motion.button>
+                </div>
+              )}
+            </div>
+          </motion.div>
+
+          {/* Events Section */}
+          <motion.div
+            initial={{ x: 100, opacity: 0 }}
+            animate={{ x: 0, opacity: 1 }}
+            className="lg:w-2/3"
+          >
+            {/* Categories */}
+            <motion.div
+              className="flex flex-wrap gap-3 mb-6"
+              variants={{
+                hidden: { opacity: 0 },
+                show: {
+                  opacity: 1,
+                  transition: {
+                    staggerChildren: 0.1,
+                  },
+                },
+              }}
+              initial="hidden"
+              animate="show"
+            >
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={() => setSelectedCategory("all")}
+                className={`px-4 py-2 rounded-lg ${
+                  selectedCategory === "all"
+                    ? "bg-purple-600 text-white"
+                    : "bg-white text-gray-600"
+                }`}
+              >
+                Todos
+              </motion.button>
+              {categories.map((category) => (
+                <motion.button
+                  key={category.id}
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  onClick={() => setSelectedCategory(category.id)}
+                  className={`px-4 py-2 rounded-lg flex items-center gap-2 ${
+                    selectedCategory === category.id
+                      ? "bg-purple-600 text-white"
+                      : "bg-white text-gray-600"
+                  }`}
+                >
+                  <span>{category.icon}</span>
+                  {category.name}
+                </motion.button>
               ))}
-            </AnimatePresence>
-          </div>
+            </motion.div>
+
+            {/* Publications Grid */}
+            {loadingPublications ? (
+              <div className="flex justify-center items-center h-64">
+                <motion.div
+                  animate={{ rotate: 360 }}
+                  transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+                  className="w-16 h-16 border-4 border-purple-600 border-t-transparent rounded-full"
+                />
+              </div>
+            ) : filteredPublications.length === 0 ? (
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                className="text-center py-12 bg-white rounded-xl"
+              >
+                <p className="text-gray-600 text-lg">
+                  No hay eventos para mostrar
+                </p>
+              </motion.div>
+            ) : (
+              <motion.div
+                className="grid grid-cols-1 md:grid-cols-2 gap-6"
+                variants={{
+                  hidden: { opacity: 0 },
+                  show: {
+                    opacity: 1,
+                    transition: {
+                      staggerChildren: 0.1,
+                    },
+                  },
+                }}
+                initial="hidden"
+                animate="show"
+              >
+                {filteredPublications.map((publication) => (
+                  <motion.div
+                    key={publication._id}
+                    whileHover={{ scale: 1.02 }}
+                    className="bg-white rounded-xl shadow-lg overflow-hidden"
+                  >
+                    <div className="relative h-48">
+                      <img
+                        src={publication.image || "/default-event.jpg"}
+                        alt={publication.title}
+                        className="w-full h-full object-cover"
+                      />
+                      <div className="absolute top-4 right-4 bg-white px-3 py-1 rounded-full text-sm font-medium shadow">
+                        {
+                          categories.find(
+                            (cat) => cat.id === publication.category
+                          )?.icon
+                        }
+                        {publication.category}
+                      </div>
+                    </div>
+                    <div className="p-6">
+                      <h3 className="text-xl font-bold mb-2">
+                        {publication.title}
+                      </h3>
+                      <p className="text-gray-600 mb-4">
+                        {publication.description}
+                      </p>
+                      <div className="flex justify-between items-center">
+                        <span className="text-sm text-gray-500">
+                          {new Date(publication.date).toLocaleDateString()}
+                        </span>
+                        <motion.button
+                          whileHover={{ scale: 1.05 }}
+                          whileTap={{ scale: 0.95 }}
+                          className="text-purple-600 hover:text-purple-800 font-medium"
+                        >
+                          Leer más →
+                        </motion.button>
+                      </div>
+                    </div>
+                  </motion.div>
+                ))}
+              </motion.div>
+            )}
+          </motion.div>
         </div>
       </div>
     </div>
