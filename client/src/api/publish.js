@@ -59,7 +59,8 @@ export const createPublication = async (formData) => {
     const response = await fetch(API_URL, {
       method: "POST",
       credentials: "include",
-      body: formData, // Envía formData directamente
+      body: formData, // Asegúrate de que 'formData' contenga los datos correctos
+      // No necesitas 'headers' aquí porque estás enviando 'formData'
     });
     if (!response.ok) await handleFetchError(response);
     toast.success("¡Publicación creada exitosamente!"); // Mensaje de éxito
@@ -108,37 +109,23 @@ export const deletePublication = async (id) => {
 
 // Fetch para buscar publicaciones por categoría
 export const fetchPublicationsByCategory = async (category) => {
-  if (!category) throw new Error("Invalid category");
+  const trimmedCategory = category?.trim();
+  if (!trimmedCategory) throw new Error("Invalid category");
   try {
     const response = await fetch(
-      `${API_URL}/searched/for/category/${category}`,
+      `${API_URL}/searched/for/category/${encodeURIComponent(trimmedCategory)}`,
       {
         method: "GET",
         credentials: "include",
         headers: getHeaders(),
       }
     );
-    if (!response.ok) await handleFetchError(response);
+    if (!response.ok) {
+      await handleFetchError(response);
+    }
     return await response.json();
   } catch (error) {
     console.error("Error fetching publications by category:", error);
-    throw error;
-  }
-};
-
-// Fetch para buscar publicaciones por título
-export const fetchPublicationsByTitle = async (title) => {
-  if (!title) throw new Error("Invalid title");
-  try {
-    const response = await fetch(`${API_URL}/searched/for/title/${title}`, {
-      method: "GET",
-      credentials: "include",
-      headers: getHeaders(),
-    });
-    if (!response.ok) await handleFetchError(response);
-    return await response.json();
-  } catch (error) {
-    console.error("Error fetching publications by title:", error);
     throw error;
   }
 };

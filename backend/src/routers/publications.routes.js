@@ -14,7 +14,7 @@ publicationsRoutes.get("/publications", publicationGetter);
 publicationsRoutes.get("/publications/:id", postFinderById);
 publicationsRoutes.post("/publications", validatorJWT, postCreator);
 publicationsRoutes.put("/publications/:id", validatorJWT, postUpdater);
-publicationsRoutes.delete("/publications/:id", postRemover);
+publicationsRoutes.delete("/publications/:id", validatorJWT, postRemover);
 publicationsRoutes.get(
   "/publications/searched/for/category/:category",
   categoryPostGetter

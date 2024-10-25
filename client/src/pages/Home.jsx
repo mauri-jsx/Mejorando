@@ -3,7 +3,10 @@ import { motion } from "framer-motion";
 import { Link, useNavigate } from "react-router-dom";
 import { Edit2, LogOut, Plus, Camera } from "lucide-react";
 import { updateProfilePicture, getLoggedUser, logoutUser } from "../api/auth";
-import { fetchAllPublications } from "../api/publish";
+import {
+  fetchAllPublications,
+  fetchPublicationsByCategory,
+} from "../api/publish";
 import { toast, Toaster } from "react-hot-toast";
 
 const Home = () => {
@@ -29,7 +32,7 @@ const Home = () => {
 
   useEffect(() => {
     fetchUser();
-    fetchPublications();
+    fetchPublications(); // Cargar todas las publicaciones al inicio
   }, []);
 
   const fetchUser = async () => {
@@ -44,16 +47,25 @@ const Home = () => {
     }
   };
 
-  const fetchPublications = async () => {
+  const fetchPublications = async (category = "all") => {
     setLoadingPublications(true);
     try {
-      const data = await fetchAllPublications();
-      setPublications(data);
+      const data =
+        category === "all"
+          ? await fetchAllPublications()
+          : await fetchPublicationsByCategory(category);
+
+      setPublications(data); // Asegúrate de que `data` contenga las publicaciones
     } catch (error) {
       toast.error("Error al cargar publicaciones");
     } finally {
       setLoadingPublications(false);
     }
+  };
+
+  const handleCategoryChange = (category) => {
+    setSelectedCategory(category);
+    fetchPublications(category); // Llama a la función para cargar publicaciones por categoría
   };
 
   const handleProfilePictureChange = (e) => {
@@ -97,6 +109,7 @@ const Home = () => {
     }
   };
 
+  // Filtrado de publicaciones por categoría
   const filteredPublications =
     selectedCategory === "all"
       ? publications
@@ -238,129 +251,48 @@ const Home = () => {
             animate={{ x: 0, opacity: 1 }}
             className="lg:w-2/3"
           >
-            {/* Categories */}
-            <motion.div
-              className="flex flex-wrap gap-3 mb-6"
-              variants={{
-                hidden: { opacity: 0 },
-                show: {
-                  opacity: 1,
-                  transition: {
-                    staggerChildren: 0.1,
-                  },
-                },
-              }}
-              initial="hidden"
-              animate="show"
-            >
-              <motion.button
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                onClick={() => setSelectedCategory("all")}
-                className={`px-4 py-2 rounded-lg ${
+            <h2 className="text-2xl font-bold mb-4">Publicaciones</h2>
+            <div className="flex flex-wrap gap-4 mb-4">
+              {categories.map((category) => (
+                <button
+                  key={category.id}
+                  onClick={() => handleCategoryChange(category.id)}
+                  className={`px-4 py-2 rounded-full ${
+                    selectedCategory === category.id
+                      ? "bg-purple-600 text-white"
+                      : "bg-gray-200 text-gray-800"
+                  }`}
+                >
+                  {category.icon} {category.name}
+                </button>
+              ))}
+              <button
+                onClick={() => handleCategoryChange("all")}
+                className={`px-4 py-2 rounded-full ${
                   selectedCategory === "all"
                     ? "bg-purple-600 text-white"
-                    : "bg-white text-gray-600"
+                    : "bg-gray-200 text-gray-800"
                 }`}
               >
                 Todos
-              </motion.button>
-              {categories.map((category) => (
-                <motion.button
-                  key={category.id}
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  onClick={() => setSelectedCategory(category.id)}
-                  className={`px-4 py-2 rounded-lg flex items-center gap-2 ${
-                    selectedCategory === category.id
-                      ? "bg-purple-600 text-white"
-                      : "bg-white text-gray-600"
-                  }`}
-                >
-                  <span>{category.icon}</span>
-                  {category.name}
-                </motion.button>
-              ))}
-            </motion.div>
+              </button>
+            </div>
 
-            {/* Publications Grid */}
             {loadingPublications ? (
-              <div className="flex justify-center items-center h-64">
-                <motion.div
-                  animate={{ rotate: 360 }}
-                  transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-                  className="w-16 h-16 border-4 border-purple-600 border-t-transparent rounded-full"
-                />
-              </div>
-            ) : filteredPublications.length === 0 ? (
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                className="text-center py-12 bg-white rounded-xl"
-              >
-                <p className="text-gray-600 text-lg">
-                  No hay eventos para mostrar
-                </p>
-              </motion.div>
+              <p>Cargando publicaciones...</p>
             ) : (
-              <motion.div
-                className="grid grid-cols-1 md:grid-cols-2 gap-6"
-                variants={{
-                  hidden: { opacity: 0 },
-                  show: {
-                    opacity: 1,
-                    transition: {
-                      staggerChildren: 0.1,
-                    },
-                  },
-                }}
-                initial="hidden"
-                animate="show"
-              >
-                {filteredPublications.map((publication) => (
-                  <motion.div
-                    key={publication._id}
-                    whileHover={{ scale: 1.02 }}
-                    className="bg-white rounded-xl shadow-lg overflow-hidden"
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {filteredPublications.map((pub) => (
+                  <div
+                    key={pub.id}
+                    className="bg-white shadow-md rounded-lg p-4"
                   >
-                    <div className="relative h-48">
-                      <img
-                        src={publication.image || "/default-event.jpg"}
-                        alt={publication.title}
-                        className="w-full h-full object-cover"
-                      />
-                      <div className="absolute top-4 right-4 bg-white px-3 py-1 rounded-full text-sm font-medium shadow">
-                        {
-                          categories.find(
-                            (cat) => cat.id === publication.category
-                          )?.icon
-                        }
-                        {publication.category}
-                      </div>
-                    </div>
-                    <div className="p-6">
-                      <h3 className="text-xl font-bold mb-2">
-                        {publication.title}
-                      </h3>
-                      <p className="text-gray-600 mb-4">
-                        {publication.description}
-                      </p>
-                      <div className="flex justify-between items-center">
-                        <span className="text-sm text-gray-500">
-                          {new Date(publication.date).toLocaleDateString()}
-                        </span>
-                        <motion.button
-                          whileHover={{ scale: 1.05 }}
-                          whileTap={{ scale: 0.95 }}
-                          className="text-purple-600 hover:text-purple-800 font-medium"
-                        >
-                          Leer más →
-                        </motion.button>
-                      </div>
-                    </div>
-                  </motion.div>
+                    <h3 className="font-semibold text-lg">{pub.title}</h3>
+                    <p className="text-gray-600">{pub.description}</p>
+                    <p className="text-gray-500">{pub.category}</p>
+                  </div>
                 ))}
-              </motion.div>
+              </div>
             )}
           </motion.div>
         </div>

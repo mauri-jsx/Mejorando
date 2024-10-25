@@ -68,24 +68,17 @@ export const register = async (req, res) => {
 export const login = async (req, res) => {
   try {
     const { email, password } = req.body;
-
     const userSearched = await user.findOne({ emails: email });
-
     if (!userSearched)
       return res.status(401).json({ message: "Invalid email" });
-
     const isValidPassword = await bcrypt.compare(
       password,
       userSearched.passwords
     );
-
     if (!isValidPassword)
       return res.status(401).json({ message: "Invalid password" });
-
     const token = await generateJWT(userSearched._id);
-
     req.session.token = token;
-
     res.cookie("authToken", token, {
       httpOnly: true,
       secure: IS_PRODUCTION === "production",

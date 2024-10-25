@@ -9,8 +9,6 @@ const userModel = new mongoose.Schema({
     _id: { type: String, default: "imagenProyect/afpdiox30acmlfvcskww" },
     url: { type: String, default: "https://res.cloudinary.com/ddwriwzgm/image/upload/v1727374339/imagenProyect/afpdiox30acmlfvcskww.jpg" },
   },
-  isApproved: { type: Boolean, default: false },
-  isAuthorized: { type: Boolean, default: false },
 });
 
 export const user = mongoose.model("User", userModel);
