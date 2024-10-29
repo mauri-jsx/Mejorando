@@ -35,6 +35,7 @@ const Publish = () => {
     category: "",
     startDates: "",
     endDates: "",
+    medias: { photos: [], videos: [] },
   });
   const [mediaFiles, setMediaFiles] = useState({ photos: [], videos: [] });
   const [validationErrors, setValidationErrors] = useState({});
@@ -56,7 +57,10 @@ const Publish = () => {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
+    setFormData((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
     setValidationErrors((prev) => ({ ...prev, [name]: undefined }));
   };
 
@@ -93,7 +97,7 @@ const Publish = () => {
 
     const submissionData = new FormData();
     Object.keys(formData).forEach((key) => {
-      if (key === "locations") {
+      if (key === "locations" || key === "medias") {
         submissionData.append(key, JSON.stringify(formData[key]));
       } else {
         submissionData.append(key, formData[key]);
@@ -116,6 +120,7 @@ const Publish = () => {
           category: "",
           startDates: "",
           endDates: "",
+          medias: { photos: [], videos: [] },
         });
         setMediaFiles({ photos: [], videos: [] });
       } else {

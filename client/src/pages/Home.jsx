@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { Link, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { Edit2, LogOut, Plus, Camera } from "lucide-react";
 import { updateProfilePicture, getLoggedUser, logoutUser } from "../api/auth";
 import {
@@ -282,16 +282,66 @@ const Home = () => {
               <p>Cargando publicaciones...</p>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {filteredPublications.map((pub) => (
-                  <div
-                    key={pub.id}
-                    className="bg-white shadow-md rounded-lg p-4"
-                  >
-                    <h3 className="font-semibold text-lg">{pub.title}</h3>
-                    <p className="text-gray-600">{pub.description}</p>
-                    <p className="text-gray-500">{pub.category}</p>
-                  </div>
-                ))}
+                {filteredPublications.map((pub) => {
+                  // Crear objetos de fecha para obtener la fecha y la hora
+                  const startDate = new Date(pub.startDates);
+                  const endDate = new Date(pub.endDates);
+
+                  // Formatear la fecha y la hora
+                  const formattedStartDate = startDate.toLocaleDateString();
+                  const formattedStartTime = startDate.toLocaleTimeString([], {
+                    hour: "2-digit",
+                    minute: "2-digit",
+                  });
+                  const formattedEndDate = endDate.toLocaleDateString();
+                  const formattedEndTime = endDate.toLocaleTimeString([], {
+                    hour: "2-digit",
+                    minute: "2-digit",
+                  });
+
+                  return (
+                    <motion.div
+                      key={pub._id} // Usa pub._id en lugar de pub.id
+                      className="bg-white shadow-md rounded-lg p-4"
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      transition={{ duration: 0.5 }}
+                    >
+                      {/* Imagen del Evento */}
+                      {pub.medias.photos.length > 0 && (
+                        <img
+                          src={pub.medias.photos[0].url} // Accede a la URL de la imagen
+                          alt={pub.titles}
+                          className="w-full h-48 object-cover rounded-t-lg mb-4"
+                        />
+                      )}
+
+                      {/* Título del Evento */}
+                      <h3 className="font-semibold text-lg">{pub.titles}</h3>
+
+                      {/* Categoría del Evento */}
+                      <p className="text-gray-500">
+                        Categoría:{" "}
+                        <span className="font-semibold">{pub.category}</span>
+                      </p>
+
+                      {/* Fechas */}
+                      <p className="text-gray-500">
+                        Fecha de Inicio: {formattedStartDate} <br />
+                        Hora de Inicio: {formattedStartTime}
+                      </p>
+                      <p className="text-gray-500">
+                        Fecha de Fin: {formattedEndDate} <br />
+                        Hora de Fin: {formattedEndTime}
+                      </p>
+
+                      {/* Botón "Ver Más" */}
+                      <button className="mt-2 bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-600 transition duration-200">
+                        Ver más sobre el evento
+                      </button>
+                    </motion.div>
+                  );
+                })}
               </div>
             )}
           </motion.div>
