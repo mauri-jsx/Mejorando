@@ -281,13 +281,10 @@ const Home = () => {
             {loadingPublications ? (
               <p>Cargando publicaciones...</p>
             ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {filteredPublications.map((pub) => {
-                  // Crear objetos de fecha para obtener la fecha y la hora
                   const startDate = new Date(pub.startDates);
                   const endDate = new Date(pub.endDates);
-
-                  // Formatear la fecha y la hora
                   const formattedStartDate = startDate.toLocaleDateString();
                   const formattedStartTime = startDate.toLocaleTimeString([], {
                     hour: "2-digit",
@@ -301,44 +298,70 @@ const Home = () => {
 
                   return (
                     <motion.div
-                      key={pub._id} // Usa pub._id en lugar de pub.id
-                      className="bg-white shadow-md rounded-lg p-4"
+                      key={pub._id}
+                      className="bg-white shadow-lg rounded-lg p-4 relative w-[400px] h-[340px] mx-auto"
                       initial={{ opacity: 0 }}
                       animate={{ opacity: 1 }}
                       transition={{ duration: 0.5 }}
                     >
                       {/* Imagen del Evento */}
                       {pub.medias.photos.length > 0 && (
-                        <img
-                          src={pub.medias.photos[0].url} // Accede a la URL de la imagen
-                          alt={pub.titles}
-                          className="w-full h-48 object-cover rounded-t-lg mb-4"
-                        />
+                        <div className="relative">
+                          <img
+                            src={pub.medias.photos[0].url}
+                            alt={pub.titles}
+                            className="w-full h-52 object-cover rounded-t-lg"
+                          />
+                          {/* Categoría con solo el icono y despliegue al pasar el mouse */}
+                          <motion.div
+                            className="absolute bottom-2 right-2 bg-blue-400/80 text-white px-1 py-1 rounded-full text-xs font-medium shadow-md flex items-center gap-1 cursor-pointer overflow-hidden"
+                            initial={{ width: "2rem" }}
+                            whileHover={{ width: "auto" }}
+                            transition={{ duration: 0.3 }}
+                          >
+                            <span
+                              className="text-lg mx-auto opacity-90"
+                              style={{ fontSize: "20px" }}
+                            >
+                              {
+                                categories.find(
+                                  (cat) => cat.id === pub.category
+                                )?.icon
+                              }
+                            </span>
+                            <span className="ml-2 whitespace-nowrap">
+                              {
+                                categories.find(
+                                  (cat) => cat.id === pub.category
+                                )?.name
+                              }
+                            </span>
+                          </motion.div>
+                        </div>
                       )}
 
                       {/* Título del Evento */}
-                      <h3 className="font-semibold text-lg">{pub.titles}</h3>
+                      <h3 className="font-semibold text-lg mt-3 mb-1 text-center">
+                        {pub.titles}
+                      </h3>
 
-                      {/* Categoría del Evento */}
-                      <p className="text-gray-500">
-                        Categoría:{" "}
-                        <span className="font-semibold">{pub.category}</span>
+                      {/* Fechas con emojis */}
+                      <p className="text-gray-600 text-sm text-center">
+                        📅 Fecha de Inicio: {formattedStartDate} -{" "}
+                        {formattedStartTime}
+                      </p>
+                      <p className="text-gray-600 text-sm text-center">
+                        📅 Fecha de Fin: {formattedEndDate} - {formattedEndTime}
                       </p>
 
-                      {/* Fechas */}
-                      <p className="text-gray-500">
-                        Fecha de Inicio: {formattedStartDate} <br />
-                        Hora de Inicio: {formattedStartTime}
-                      </p>
-                      <p className="text-gray-500">
-                        Fecha de Fin: {formattedEndDate} <br />
-                        Hora de Fin: {formattedEndTime}
-                      </p>
-
-                      {/* Botón "Ver Más" */}
-                      <button className="mt-2 bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-600 transition duration-200">
-                        Ver más sobre el evento
-                      </button>
+                      {/* Botón "Ver Más" centrado con animación */}
+                      <motion.button
+                        className="mt-4 flex items-center justify-center mx-auto bg-gradient-to-r from-blue-500 to-blue-600 text-white py-2 px-4 rounded-full hover:shadow-lg transition-all duration-300 font-semibold"
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.95 }}
+                      >
+                        Ver más sobre el evento <span className="ml-2">➡️</span>
+                      </motion.button>
                     </motion.div>
                   );
                 })}
@@ -350,5 +373,4 @@ const Home = () => {
     </div>
   );
 };
-
 export default Home;
