@@ -283,7 +283,6 @@ const Home = () => {
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-y-16 gap-x-10">
                 {" "}
-                {/* Ajuste del gap en ejes y separación de columnas */}
                 {filteredPublications.map((pub) => {
                   const startDate = new Date(pub.startDates);
                   const endDate = new Date(pub.endDates);
@@ -310,7 +309,6 @@ const Home = () => {
                       animate={{ opacity: 1 }}
                       transition={{ duration: 0.5 }}
                     >
-                      {/* Imagen del Evento */}
                       {pub.medias.photos.length > 0 && (
                         <div className="relative">
                           <img
@@ -318,7 +316,6 @@ const Home = () => {
                             alt={pub.titles}
                             className="w-full h-52 object-cover rounded-t-lg"
                           />
-                          {/* Ícono de categoría en la parte inferior derecha */}
                           <motion.div
                             className="absolute bottom-2 right-2 bg-blue-400/80 text-white px-1 py-1 rounded-full text-xs font-medium shadow-md flex items-center gap-1 cursor-pointer overflow-hidden"
                             initial={{ width: "2rem" }}
@@ -337,13 +334,9 @@ const Home = () => {
                           </motion.div>
                         </div>
                       )}
-
-                      {/* Título del Evento */}
                       <h3 className="font-semibold text-lg mt-3 mb-1 text-center">
                         {pub.titles}
                       </h3>
-
-                      {/* Fechas con emojis */}
                       <p className="text-gray-600 text-sm text-center">
                         📅 Fecha de Inicio: {formattedStartDate} -{" "}
                         {formattedStartTime}
@@ -351,8 +344,6 @@ const Home = () => {
                       <p className="text-gray-600 text-sm text-center">
                         📅 Fecha de Fin: {formattedEndDate} - {formattedEndTime}
                       </p>
-
-                      {/* Botón "Ver Más" centrado con animación */}
                       <motion.button
                         className="mt-4 flex items-center justify-center mx-auto bg-gradient-to-r from-blue-500 to-blue-600 text-white py-2 px-4 rounded-full hover:shadow-lg transition-all duration-300 font-semibold"
                         whileHover={{ scale: 1.05 }}
