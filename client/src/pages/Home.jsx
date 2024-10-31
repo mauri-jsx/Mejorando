@@ -281,7 +281,9 @@ const Home = () => {
             {loadingPublications ? (
               <p>Cargando publicaciones...</p>
             ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-y-16 gap-x-10">
+                {" "}
+                {/* Ajuste del gap en ejes y separación de columnas */}
                 {filteredPublications.map((pub) => {
                   const startDate = new Date(pub.startDates);
                   const endDate = new Date(pub.endDates);
@@ -296,10 +298,14 @@ const Home = () => {
                     minute: "2-digit",
                   });
 
+                  const categoryData = categories.find(
+                    (cat) => cat.id === pub.category
+                  );
+
                   return (
                     <motion.div
                       key={pub._id}
-                      className="bg-white shadow-lg rounded-lg p-4 relative w-[400px] h-[340px] mx-auto"
+                      className="bg-white shadow-lg rounded-lg p-4 relative w-full h-[350px] mx-auto"
                       initial={{ opacity: 0 }}
                       animate={{ opacity: 1 }}
                       transition={{ duration: 0.5 }}
@@ -312,7 +318,7 @@ const Home = () => {
                             alt={pub.titles}
                             className="w-full h-52 object-cover rounded-t-lg"
                           />
-                          {/* Categoría con solo el icono y despliegue al pasar el mouse */}
+                          {/* Ícono de categoría en la parte inferior derecha */}
                           <motion.div
                             className="absolute bottom-2 right-2 bg-blue-400/80 text-white px-1 py-1 rounded-full text-xs font-medium shadow-md flex items-center gap-1 cursor-pointer overflow-hidden"
                             initial={{ width: "2rem" }}
@@ -320,21 +326,13 @@ const Home = () => {
                             transition={{ duration: 0.3 }}
                           >
                             <span
-                              className="text-lg mx-auto opacity-90"
+                              className="text-lg opacity-90"
                               style={{ fontSize: "20px" }}
                             >
-                              {
-                                categories.find(
-                                  (cat) => cat.id === pub.category
-                                )?.icon
-                              }
+                              {categoryData?.icon || "🎉"}
                             </span>
                             <span className="ml-2 whitespace-nowrap">
-                              {
-                                categories.find(
-                                  (cat) => cat.id === pub.category
-                                )?.name
-                              }
+                              {categoryData?.name || "Categoría"}
                             </span>
                           </motion.div>
                         </div>
