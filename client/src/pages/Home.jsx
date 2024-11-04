@@ -32,7 +32,7 @@ const Home = () => {
 
   useEffect(() => {
     fetchUser();
-    fetchPublications(); // Cargar todas las publicaciones al inicio
+    fetchPublications();
   }, []);
 
   const fetchUser = async () => {
@@ -55,7 +55,7 @@ const Home = () => {
           ? await fetchAllPublications()
           : await fetchPublicationsByCategory(category);
 
-      setPublications(data); // Asegúrate de que `data` contenga las publicaciones
+      setPublications(data);
     } catch (error) {
       toast.error("Error al cargar publicaciones");
     } finally {
@@ -65,7 +65,7 @@ const Home = () => {
 
   const handleCategoryChange = (category) => {
     setSelectedCategory(category);
-    fetchPublications(category); // Llama a la función para cargar publicaciones por categoría
+    fetchPublications(category);
   };
 
   const handleProfilePictureChange = (e) => {
@@ -109,7 +109,6 @@ const Home = () => {
     }
   };
 
-  // Filtrado de publicaciones por categoría
   const filteredPublications =
     selectedCategory === "all"
       ? publications
