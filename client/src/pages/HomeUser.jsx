@@ -59,11 +59,11 @@ const HomeUser = () => {
         <div className="w-1/4 mr-8">
           <div className="bg-white shadow-lg rounded-lg p-6 mb-8 flex flex-col items-center">
             <img
-              src="https://example.com/tu-imagen.jpg" // Reemplaza con la URL de tu imagen
+              src="https://i.pinimg.com/564x/13/b4/08/13b408f0ad453542c0d8fa8e62602245.jpg" // Reemplaza con la URL de tu imagen
               alt="Perfil"
               className="w-24 h-24 rounded-full bg-gray-300"
             />
-            <h2 className="text-xl font-semibold mt-4">Usuario</h2>
+            <h2 className="text-xl font-semibold mt-4">Invitado</h2>
             <div className="mt-4 flex space-x-4">
               <button
                 onClick={() => navigate("/login")}
