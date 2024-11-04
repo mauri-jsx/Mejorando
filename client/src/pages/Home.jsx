@@ -54,7 +54,6 @@ const Home = () => {
         category === "all"
           ? await fetchAllPublications()
           : await fetchPublicationsByCategory(category);
-
       setPublications(data);
     } catch (error) {
       toast.error("Error al cargar publicaciones");
@@ -102,7 +101,7 @@ const Home = () => {
       const response = await logoutUser();
       if (response.success) {
         toast.success("Sesión cerrada exitosamente");
-        setTimeout(() => navigate("/login"), 1500);
+        setTimeout(() => navigate("/"), 1500);
       }
     } catch (error) {
       toast.error("Error al cerrar sesión");
@@ -281,7 +280,6 @@ const Home = () => {
               <p>Cargando publicaciones...</p>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-y-16 gap-x-10">
-                {" "}
                 {filteredPublications.map((pub) => {
                   const startDate = new Date(pub.startDates);
                   const endDate = new Date(pub.endDates);
@@ -361,4 +359,5 @@ const Home = () => {
     </div>
   );
 };
+
 export default Home;
