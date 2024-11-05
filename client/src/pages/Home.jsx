@@ -113,6 +113,23 @@ const Home = () => {
       ? publications
       : publications.filter((pub) => pub.category === selectedCategory);
 
+  // Categorizar eventos por fecha
+  const getEventStatus = (endDate) => {
+    const now = new Date();
+    if (now < new Date(endDate)) return "ongoing"; // Eventos que siguen en curso
+    if (
+      now >= new Date(endDate) &&
+      now <= new Date(endDate).setDate(new Date(endDate).getDate() + 1)
+    )
+      return "ending"; // Evento por finalizar
+    return "ended"; // Evento finalizado
+  };
+
+  const upcomingEvents = filteredPublications.filter((pub) => {
+    const eventStatus = getEventStatus(pub.endDates);
+    return eventStatus === "ending" || eventStatus === "ongoing";
+  });
+
   return (
     <div className="min-h-screen bg-gray-50">
       <Toaster position="top-right" />
@@ -153,13 +170,200 @@ const Home = () => {
 
       <div className="container mx-auto px-4 py-8">
         <div className="flex flex-col lg:flex-row gap-8">
-          {/* Profile Card */}
+          {/* izquierda Column - Categories */}
           <motion.div
             initial={{ x: -100, opacity: 0 }}
             animate={{ x: 0, opacity: 1 }}
-            className="lg:w-1/3"
+            className="lg:w-1/4 sticky top-0"
           >
             <div className="bg-white rounded-xl shadow-lg p-6">
+              <h3 className="text-xl font-semibold mb-4">Categorías</h3>
+              <div className="flex flex-col gap-4">
+                {categories.map((category) => (
+                  <button
+                    key={category.id}
+                    onClick={() => handleCategoryChange(category.id)}
+                    className={`px-4 py-2 rounded-full ${
+                      selectedCategory === category.id
+                        ? "bg-purple-600 text-white"
+                        : "bg-gray-200 text-gray-800"
+                    }`}
+                  >
+                    {category.icon} {category.name}
+                  </button>
+                ))}
+                <button
+                  onClick={() => handleCategoryChange("all")}
+                  className={`px-4 py-2 rounded-full ${
+                    selectedCategory === "all"
+                      ? "bg-purple-600 text-white"
+                      : "bg-gray-200 text-gray-800"
+                  }`}
+                >
+                  Todos
+                </button>
+              </div>
+            </div>
+
+            {/* Tarjeta de Recomendación de Eventos */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              className="bg-white rounded-xl shadow-lg p-6 mt-8 hover:bg-gray-100 transition-all duration-300"
+            >
+              <h3 className="text-xl font-semibold mb-4 text-center">
+                Recomendación de Eventos
+              </h3>
+              <p className="text-gray-600 mb-4 text-center">
+                Explora eventos populares que podrían interesarte.
+              </p>
+              <div className="flex items-center gap-2 mb-4 justify-center">
+                <span className="text-gray-800 font-semibold">Seguidores:</span>
+                <span className="text-purple-600 font-bold">
+                  {loggedUser?.followersCount || 1250}{" "}
+                  {/* Valor ficticio predeterminado */}
+                </span>
+              </div>
+              <div className="flex flex-col gap-4">
+                {upcomingEvents.map((event) => {
+                  const eventStatus = getEventStatus(event.endDates);
+                  let bgColor, statusText;
+
+                  if (eventStatus === "ongoing") {
+                    bgColor = "bg-green-500";
+                    statusText = "En Curso 🟢";
+                  } else if (eventStatus === "ending") {
+                    bgColor = "bg-orange-500";
+                    statusText = "Por Finalizar 🟠";
+                  } else {
+                    bgColor = "bg-red-500";
+                    statusText = "Finalizado 🔴";
+                  }
+
+                  return (
+                    <a
+                      key={event.id}
+                      href={`/evento/${event.id}`}
+                      className={`p-4 rounded-lg shadow-lg ${bgColor} text-white transition-all duration-200 hover:bg-opacity-90`}
+                    >
+                      <h4 className="font-semibold">{event.titles}</h4>
+                      <p className="text-sm">{event.descriptions}</p>
+                      <span className="text-xs font-bold mt-2 block">
+                        {statusText}
+                      </span>
+                    </a>
+                  );
+                })}
+              </div>
+              <div className="mt-4 text-sm text-center text-gray-500">
+                <p className="mb-2">Leyenda:</p>
+                <p className="text-green-500">🟢 En Curso</p>
+                <p className="text-orange-500">🟠 Por Finalizar</p>
+                <p className="text-red-500">🔴 Finalizado</p>
+              </div>
+            </motion.div>
+          </motion.div>
+
+          {/* Center Column - Publications */}
+          <motion.div
+            initial={{ x: 100, opacity: 0 }}
+            animate={{ x: 0, opacity: 1 }}
+            className="lg:w-1/2 md:w-2/3 sm:w-11/12 mx-auto overflow-y-scroll max-h-[80vh]"
+          >
+            <h2 className="text-2xl font-bold text-center mb-4">
+              Publicaciones
+            </h2>
+            {loadingPublications ? (
+              <p className="text-center">Cargando publicaciones...</p>
+            ) : (
+              <div className="flex flex-col gap-6">
+                {filteredPublications
+                  .slice()
+                  .reverse()
+                  .map((pub) => {
+                    const startDate = new Date(pub.startDates);
+                    const endDate = new Date(pub.endDates);
+                    const formattedStartDate = startDate.toLocaleDateString();
+                    const formattedStartTime = startDate.toLocaleTimeString(
+                      [],
+                      {
+                        hour: "2-digit",
+                        minute: "2-digit",
+                      }
+                    );
+                    const formattedEndDate = endDate.toLocaleDateString();
+                    const formattedEndTime = endDate.toLocaleTimeString([], {
+                      hour: "2-digit",
+                      minute: "2-digit",
+                    });
+
+                    const categoryData = categories.find(
+                      (cat) => cat.id === pub.category
+                    );
+
+                    return (
+                      <motion.div
+                        key={pub._id}
+                        className="bg-white shadow-lg rounded-lg p-4 relative w-full mx-auto"
+                        initial={{ opacity: 0, scale: 0.95 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        transition={{ duration: 0.4 }}
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.95 }}
+                      >
+                        {/* Imagen y etiqueta de categoría */}
+                        {pub.medias?.photos?.[0]?.url && (
+                          <div className="relative">
+                            <img
+                              src={pub.medias.photos[0].url}
+                              alt={pub.titles}
+                              className="w-full h-60 object-cover rounded-t-lg"
+                            />
+                            <motion.div
+                              className="absolute bottom-2 right-2 bg-blue-400/80 text-white px-2 py-1 rounded-full text-xs font-medium shadow-md flex items-center gap-1 cursor-pointer overflow-hidden"
+                              initial={{ width: "2rem" }}
+                              whileHover={{ width: "auto" }}
+                              transition={{ duration: 0.3 }}
+                            >
+                              <span className="text-lg opacity-90">
+                                {categoryData?.icon || "🎉"}
+                              </span>
+                              <span className="ml-1 whitespace-nowrap">
+                                {categoryData?.name || "Categoría"}
+                              </span>
+                            </motion.div>
+                          </div>
+                        )}
+                        <h3 className="font-semibold text-lg mt-3 mb-1 text-center">
+                          {pub.titles}
+                        </h3>
+                        <p className="text-gray-600 text-xs text-center">
+                          📅 Fecha de Inicio: {formattedStartDate} -{" "}
+                          {formattedStartTime}
+                        </p>
+                        <p className="text-gray-600 text-xs text-center">
+                          📅 Fecha de Fin: {formattedEndDate} -{" "}
+                          {formattedEndTime}
+                        </p>
+                        <motion.button className="mt-4 flex items-center justify-center mx-auto bg-gradient-to-r from-blue-500 to-blue-600 text-white py-2 px-4 rounded-full hover:shadow-lg transition-all duration-300 font-semibold">
+                          Ver más sobre el evento{" "}
+                          <span className="ml-2">➡️</span>
+                        </motion.button>
+                      </motion.div>
+                    );
+                  })}
+              </div>
+            )}
+          </motion.div>
+
+          {/* derecha Column - Profile  */}
+          <motion.div
+            initial={{ x: 100, opacity: 0 }}
+            animate={{ x: 0, opacity: 1 }}
+            className="lg:w-1/4 sticky top-0"
+          >
+            {/* Profile Card */}
+            <div className="bg-white rounded-xl shadow-lg p-6 mb-8">
               <div className="relative mb-6">
                 <img
                   src={previewImage || "/default-profile.png"}
@@ -241,118 +445,6 @@ const Home = () => {
                 </div>
               )}
             </div>
-          </motion.div>
-
-          {/* Events Section */}
-          <motion.div
-            initial={{ x: 100, opacity: 0 }}
-            animate={{ x: 0, opacity: 1 }}
-            className="lg:w-2/3"
-          >
-            <h2 className="text-2xl font-bold mb-4">Publicaciones</h2>
-            <div className="flex flex-wrap gap-4 mb-4">
-              {categories.map((category) => (
-                <button
-                  key={category.id}
-                  onClick={() => handleCategoryChange(category.id)}
-                  className={`px-4 py-2 rounded-full ${
-                    selectedCategory === category.id
-                      ? "bg-purple-600 text-white"
-                      : "bg-gray-200 text-gray-800"
-                  }`}
-                >
-                  {category.icon} {category.name}
-                </button>
-              ))}
-              <button
-                onClick={() => handleCategoryChange("all")}
-                className={`px-4 py-2 rounded-full ${
-                  selectedCategory === "all"
-                    ? "bg-purple-600 text-white"
-                    : "bg-gray-200 text-gray-800"
-                }`}
-              >
-                Todos
-              </button>
-            </div>
-
-            {loadingPublications ? (
-              <p>Cargando publicaciones...</p>
-            ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-y-16 gap-x-10">
-                {filteredPublications.map((pub) => {
-                  const startDate = new Date(pub.startDates);
-                  const endDate = new Date(pub.endDates);
-                  const formattedStartDate = startDate.toLocaleDateString();
-                  const formattedStartTime = startDate.toLocaleTimeString([], {
-                    hour: "2-digit",
-                    minute: "2-digit",
-                  });
-                  const formattedEndDate = endDate.toLocaleDateString();
-                  const formattedEndTime = endDate.toLocaleTimeString([], {
-                    hour: "2-digit",
-                    minute: "2-digit",
-                  });
-
-                  const categoryData = categories.find(
-                    (cat) => cat.id === pub.category
-                  );
-
-                  return (
-                    <motion.div
-                      key={pub._id}
-                      className="bg-white shadow-lg rounded-lg p-4 relative w-full h-[350px] mx-auto"
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
-                      transition={{ duration: 0.5 }}
-                    >
-                      {pub.medias.photos.length > 0 && (
-                        <div className="relative">
-                          <img
-                            src={pub.medias.photos[0].url}
-                            alt={pub.titles}
-                            className="w-full h-52 object-cover rounded-t-lg"
-                          />
-                          <motion.div
-                            className="absolute bottom-2 right-2 bg-blue-400/80 text-white px-1 py-1 rounded-full text-xs font-medium shadow-md flex items-center gap-1 cursor-pointer overflow-hidden"
-                            initial={{ width: "2rem" }}
-                            whileHover={{ width: "auto" }}
-                            transition={{ duration: 0.3 }}
-                          >
-                            <span
-                              className="text-lg opacity-90"
-                              style={{ fontSize: "20px" }}
-                            >
-                              {categoryData?.icon || "🎉"}
-                            </span>
-                            <span className="ml-2 whitespace-nowrap">
-                              {categoryData?.name || "Categoría"}
-                            </span>
-                          </motion.div>
-                        </div>
-                      )}
-                      <h3 className="font-semibold text-lg mt-3 mb-1 text-center">
-                        {pub.titles}
-                      </h3>
-                      <p className="text-gray-600 text-sm text-center">
-                        📅 Fecha de Inicio: {formattedStartDate} -{" "}
-                        {formattedStartTime}
-                      </p>
-                      <p className="text-gray-600 text-sm text-center">
-                        📅 Fecha de Fin: {formattedEndDate} - {formattedEndTime}
-                      </p>
-                      <motion.button
-                        className="mt-4 flex items-center justify-center mx-auto bg-gradient-to-r from-blue-500 to-blue-600 text-white py-2 px-4 rounded-full hover:shadow-lg transition-all duration-300 font-semibold"
-                        whileHover={{ scale: 1.05 }}
-                        whileTap={{ scale: 0.95 }}
-                      >
-                        Ver más sobre el evento <span className="ml-2">➡️</span>
-                      </motion.button>
-                    </motion.div>
-                  );
-                })}
-              </div>
-            )}
           </motion.div>
         </div>
       </div>
