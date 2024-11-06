@@ -10,6 +10,7 @@ const publicationsModels = new mongoose.Schema(
     medias: { photos: [{ _id: String, url: String }], videos: [{ _id: String, url: String }] },
     startDates: { type: Date, require: true },
     endDates: { type: Date, require: true },
+    likes: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
   }
 );
 

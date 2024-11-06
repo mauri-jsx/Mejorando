@@ -300,3 +300,30 @@ export const categoryPostGetter = async (req, res) => {
     return res.status(500).json({ message: "Error inesperado en el servidor" });
   }
 };
+
+export const toggleLike = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const userId = req.user?._id;
+    if (!userId) return res.status(401).json({ message: "Usuario no autenticado" });
+
+    const publication = await publications.findById(id);
+    if (!publication) return res.status(404).json({ message: "Publicación no encontrada" });
+
+    const isLiked = publication.likes.includes(userId);
+    if (isLiked) {
+      publication.likes = publication.likes.filter((likeId) => !likeId.equals(userId));
+    } else {
+      publication.likes.push(userId);
+    }
+    await publication.save();
+
+    res.status(200).json({
+      message: isLiked ? "Like eliminado" : "Like agregado",
+      likesCount: publication.likes.length,
+    });
+  } catch (error) {
+    console.error("Error al dar o quitar like", error);
+    res.status(500).json({ message: "Error al actualizar el estado de like" });
+  }
+};

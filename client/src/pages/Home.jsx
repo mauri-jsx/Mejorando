@@ -1,11 +1,12 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
-import { Edit2, LogOut, Plus, Camera } from "lucide-react";
+import { Edit2, LogOut, Plus, Camera, Heart } from "lucide-react";
 import { updateProfilePicture, getLoggedUser, logoutUser } from "../api/auth";
 import {
   fetchAllPublications,
   fetchPublicationsByCategory,
+  toggleLike,
 } from "../api/publish";
 import { toast, Toaster } from "react-hot-toast";
 
@@ -20,6 +21,7 @@ const Home = () => {
   const [loadingPublications, setLoadingPublications] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState("all");
   const [isEditing, setIsEditing] = useState(false);
+  const [likedPublicationIds, setLikedPublicationIds] = useState(new Set());
 
   const navigate = useNavigate();
 
@@ -42,6 +44,7 @@ const Home = () => {
       setEmail(userData.email);
       setUsername(userData.username);
       setPreviewImage(userData.profilePicture?.url || "/default-profile.png");
+      setLikedPublicationIds(new Set(userData.likedPublications || [])); // Traer las publicaciones que ya tienen like
     } catch (error) {
       console.error("Error al obtener el usuario:", error);
     }
@@ -108,27 +111,36 @@ const Home = () => {
     }
   };
 
+  const handleLike = async (publicationId) => {
+    try {
+      const updatedPublication = await toggleLike(publicationId);
+      setLikedPublicationIds((prevLikes) => {
+        const newLikes = new Set(prevLikes);
+        if (newLikes.has(publicationId)) {
+          newLikes.delete(publicationId);
+          toast.success("¡Quito de tus publicaciones favoritas!");
+        } else {
+          newLikes.add(publicationId);
+          toast.success("¡Añadido a tus publicaciones favoritas!");
+        }
+        return newLikes;
+      });
+      setPublications((prevPublications) =>
+        prevPublications.map((pub) =>
+          pub._id === publicationId
+            ? { ...pub, liked: updatedPublication.liked }
+            : pub
+        )
+      );
+    } catch (error) {
+      toast.error("Error al alternar 'me gusta'");
+    }
+  };
+
   const filteredPublications =
     selectedCategory === "all"
       ? publications
       : publications.filter((pub) => pub.category === selectedCategory);
-
-  // Categorizar eventos por fecha
-  const getEventStatus = (endDate) => {
-    const now = new Date();
-    if (now < new Date(endDate)) return "ongoing"; // Eventos que siguen en curso
-    if (
-      now >= new Date(endDate) &&
-      now <= new Date(endDate).setDate(new Date(endDate).getDate() + 1)
-    )
-      return "ending"; // Evento por finalizar
-    return "ended"; // Evento finalizado
-  };
-
-  const upcomingEvents = filteredPublications.filter((pub) => {
-    const eventStatus = getEventStatus(pub.endDates);
-    return eventStatus === "ending" || eventStatus === "ongoing";
-  });
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -204,73 +216,15 @@ const Home = () => {
                 </button>
               </div>
             </div>
-
-            {/* Tarjeta de Recomendación de Eventos */}
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              className="bg-white rounded-xl shadow-lg p-6 mt-8 hover:bg-gray-100 transition-all duration-300"
-            >
-              <h3 className="text-xl font-semibold mb-4 text-center">
-                Recomendación de Eventos
-              </h3>
-              <p className="text-gray-600 mb-4 text-center">
-                Explora eventos populares que podrían interesarte.
-              </p>
-              <div className="flex items-center gap-2 mb-4 justify-center">
-                <span className="text-gray-800 font-semibold">Seguidores:</span>
-                <span className="text-purple-600 font-bold">
-                  {loggedUser?.followersCount || 1250}{" "}
-                  {/* Valor ficticio predeterminado */}
-                </span>
-              </div>
-              <div className="flex flex-col gap-4">
-                {upcomingEvents.map((event) => {
-                  const eventStatus = getEventStatus(event.endDates);
-                  let bgColor, statusText;
-
-                  if (eventStatus === "ongoing") {
-                    bgColor = "bg-green-500";
-                    statusText = "En Curso 🟢";
-                  } else if (eventStatus === "ending") {
-                    bgColor = "bg-orange-500";
-                    statusText = "Por Finalizar 🟠";
-                  } else {
-                    bgColor = "bg-red-500";
-                    statusText = "Finalizado 🔴";
-                  }
-
-                  return (
-                    <a
-                      key={event.id}
-                      href={`/evento/${event.id}`}
-                      className={`p-4 rounded-lg shadow-lg ${bgColor} text-white transition-all duration-200 hover:bg-opacity-90`}
-                    >
-                      <h4 className="font-semibold">{event.titles}</h4>
-                      <p className="text-sm">{event.descriptions}</p>
-                      <span className="text-xs font-bold mt-2 block">
-                        {statusText}
-                      </span>
-                    </a>
-                  );
-                })}
-              </div>
-              <div className="mt-4 text-sm text-center text-gray-500">
-                <p className="mb-2">Leyenda:</p>
-                <p className="text-green-500">🟢 En Curso</p>
-                <p className="text-orange-500">🟠 Por Finalizar</p>
-                <p className="text-red-500">🔴 Finalizado</p>
-              </div>
-            </motion.div>
           </motion.div>
 
           {/* Center Column - Publications */}
           <motion.div
             initial={{ x: 100, opacity: 0 }}
             animate={{ x: 0, opacity: 1 }}
-            className="lg:w-1/2 md:w-2/3 sm:w-11/12 mx-auto overflow-y-scroll max-h-[80vh]"
+            className="lg:w-1/3 md:w-1/2 sm:w-11/12 mx-auto overflow-y-auto max-h-[80vh] p-4"
           >
-            <h2 className="text-2xl font-bold text-center mb-4">
+            <h2 className="text-2xl font-bold text-center mb-6">
               Publicaciones
             </h2>
             {loadingPublications ? (
@@ -304,20 +258,19 @@ const Home = () => {
                     return (
                       <motion.div
                         key={pub._id}
-                        className="bg-white shadow-lg rounded-lg p-4 relative w-full mx-auto"
+                        className="bg-white shadow-lg rounded-lg p-5 relative w-full mx-auto"
                         initial={{ opacity: 0, scale: 0.95 }}
                         animate={{ opacity: 1, scale: 1 }}
                         transition={{ duration: 0.4 }}
                         whileHover={{ scale: 1.05 }}
                         whileTap={{ scale: 0.95 }}
                       >
-                        {/* Imagen y etiqueta de categoría */}
                         {pub.medias?.photos?.[0]?.url && (
-                          <div className="relative">
+                          <div className="relative w-full h-56 md:h-64 lg:h-72 overflow-hidden rounded-t-lg">
                             <img
                               src={pub.medias.photos[0].url}
                               alt={pub.titles}
-                              className="w-full h-60 object-cover rounded-t-lg"
+                              className="w-full h-full object-cover"
                             />
                             <motion.div
                               className="absolute bottom-2 right-2 bg-blue-400/80 text-white px-2 py-1 rounded-full text-xs font-medium shadow-md flex items-center gap-1 cursor-pointer overflow-hidden"
@@ -334,7 +287,7 @@ const Home = () => {
                             </motion.div>
                           </div>
                         )}
-                        <h3 className="font-semibold text-lg mt-3 mb-1 text-center">
+                        <h3 className="font-semibold text-lg mt-3 mb-2 text-center">
                           {pub.titles}
                         </h3>
                         <p className="text-gray-600 text-xs text-center">
@@ -345,9 +298,25 @@ const Home = () => {
                           📅 Fecha de Fin: {formattedEndDate} -{" "}
                           {formattedEndTime}
                         </p>
-                        <motion.button className="mt-4 flex items-center justify-center mx-auto bg-gradient-to-r from-blue-500 to-blue-600 text-white py-2 px-4 rounded-full hover:shadow-lg transition-all duration-300 font-semibold">
-                          Ver más sobre el evento{" "}
-                          <span className="ml-2">➡️</span>
+
+                        {/* Botón de Like en la parte inferior derecha */}
+                        <motion.button
+                          onClick={() => handleLike(pub._id)}
+                          className="absolute bottom-4 right-4 bg-transparent text-red-500 flex items-center gap-2"
+                        >
+                          <Heart
+                            size={20}
+                            className={`transition-colors ${
+                              likedPublicationIds.has(pub._id)
+                                ? "text-red-600"
+                                : "text-gray-500"
+                            }`}
+                          />
+                          <span className="text-sm">
+                            {likedPublicationIds.has(pub._id)
+                              ? "Quitar Me Gusta"
+                              : "Me gusta"}
+                          </span>
                         </motion.button>
                       </motion.div>
                     );
@@ -356,7 +325,7 @@ const Home = () => {
             )}
           </motion.div>
 
-          {/* derecha Column - Profile  */}
+          {/* derecha Column - Profile */}
           <motion.div
             initial={{ x: 100, opacity: 0 }}
             animate={{ x: 0, opacity: 1 }}

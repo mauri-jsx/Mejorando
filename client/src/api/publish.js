@@ -129,3 +129,26 @@ export const fetchPublicationsByCategory = async (category) => {
     throw error;
   }
 };
+
+// Fetch para alternar "me gusta" en una publicación
+// En toggleLike (eliminamos el toast aquí)
+export const toggleLike = async (postId) => {
+  if (!postId) throw new Error("Invalid Post ID");
+  try {
+    const response = await fetch(`${API_URL}/${postId}/like`, {
+      method: "PATCH",
+      credentials: "include",
+      headers: getHeaders(),
+    });
+
+    if (!response.ok) await handleFetchError(response);
+
+    const result = await response.json();
+    return result; // Devolvemos solo los datos actualizados
+  } catch (error) {
+    console.error("Error toggling like:", error);
+    throw error;
+  }
+};
+
+

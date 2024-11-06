@@ -14,13 +14,16 @@ export const uploadImage = async (filesPath) => {
     resource_type: "image",
     transformation: [
       {
-        width: 500,
-        height: 500,
-        crop: "fill",
+        width: 1000,
+        height: 1000,
+        crop: "limit",
+        quality: "auto",
+        fetch_format: "auto",
       },
     ],
   });
 };
+
 
 export const deleteImage = async (publicId) => {
   await cloudinary.uploader.destroy(publicId);
