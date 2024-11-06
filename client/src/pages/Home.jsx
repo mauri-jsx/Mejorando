@@ -137,6 +137,29 @@ const Home = () => {
     }
   };
 
+  const removeLike = async (publicationId) => {
+    try {
+      // Aquí llamamos a la API para eliminar el like
+      await toggleLike(publicationId); // Deberías implementar este endpoint que elimine el "me gusta" en tu API
+
+      setLikedPublicationIds((prevLikes) => {
+        const newLikes = new Set(prevLikes);
+        newLikes.delete(publicationId); // Eliminamos el "me gusta"
+        toast.success("¡Quito de tus publicaciones favoritas!");
+        return newLikes;
+      });
+
+      // Actualizamos el estado de las publicaciones
+      setPublications((prevPublications) =>
+        prevPublications.map((pub) =>
+          pub._id === publicationId ? { ...pub, liked: false } : pub
+        )
+      );
+    } catch (error) {
+      toast.error("Error al quitar el 'me gusta'");
+    }
+  };
+
   const filteredPublications =
     selectedCategory === "all"
       ? publications
@@ -182,7 +205,7 @@ const Home = () => {
 
       <div className="container mx-auto px-4 py-8">
         <div className="flex flex-col lg:flex-row gap-8">
-          {/* izquierda Column - Categories */}
+          {/* izquierda Column - Categorías */}
           <motion.div
             initial={{ x: -100, opacity: 0 }}
             animate={{ x: 0, opacity: 1 }}
@@ -216,6 +239,64 @@ const Home = () => {
                 </button>
               </div>
             </div>
+
+            {/* Tarjeta de publicaciones que has dado "me gusta" */}
+            <div className="bg-white rounded-xl shadow-lg p-6 mt-8">
+              <h3 className="text-xl font-semibold mb-4">
+                Publicaciones que me gustan
+              </h3>
+
+              <div className="space-y-4">
+                {Array.from(likedPublicationIds).map((publicationId) => {
+                  const publication = publications.find(
+                    (pub) => pub._id === publicationId
+                  );
+
+                  if (!publication) return null;
+
+                  const userProfilePicture =
+                    loggedUser?.profilePicture?.url || "/default-profile.png"; // Foto de perfil del usuario
+                  return (
+                    <div
+                      key={publication._id}
+                      className="flex items-center justify-between bg-gray-100 p-3 rounded-lg"
+                    >
+                      <div className="flex items-center gap-4">
+                        {/* Foto de perfil redondeada */}
+                        <img
+                          src={userProfilePicture}
+                          alt="Perfil"
+                          className="w-10 h-10 rounded-full object-cover"
+                        />
+                        {/* Título de la publicación */}
+                        <span className="text-sm font-semibold">
+                          {publication.titles}
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        {/* Corazón para indicar que tiene like */}
+                        <motion.button
+                          whileTap={{ scale: 0.9 }}
+                          onClick={() => handleLike(publication._id)}
+                          className="text-red-500"
+                        >
+                          <Heart size={18} />
+                        </motion.button>
+
+                        {/* X para eliminar el like */}
+                        <motion.button
+                          whileTap={{ scale: 0.9 }}
+                          onClick={() => removeLike(publication._id)}
+                          className="text-gray-500"
+                        >
+                          <span className="text-xl">❌</span>
+                        </motion.button>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
           </motion.div>
 
           {/* Center Column - Publications */}
@@ -224,9 +305,6 @@ const Home = () => {
             animate={{ x: 0, opacity: 1 }}
             className="lg:w-1/3 md:w-1/2 sm:w-11/12 mx-auto overflow-y-auto max-h-[80vh] p-4"
           >
-            <h2 className="text-2xl font-bold text-center mb-6">
-              Publicaciones
-            </h2>
             {loadingPublications ? (
               <p className="text-center">Cargando publicaciones...</p>
             ) : (
@@ -262,8 +340,6 @@ const Home = () => {
                         initial={{ opacity: 0, scale: 0.95 }}
                         animate={{ opacity: 1, scale: 1 }}
                         transition={{ duration: 0.4 }}
-                        whileHover={{ scale: 1.05 }}
-                        whileTap={{ scale: 0.95 }}
                       >
                         {pub.medias?.photos?.[0]?.url && (
                           <div className="relative w-full h-56 md:h-64 lg:h-72 overflow-hidden rounded-t-lg">
@@ -290,11 +366,12 @@ const Home = () => {
                         <h3 className="font-semibold text-lg mt-3 mb-2 text-center">
                           {pub.titles}
                         </h3>
-                        <p className="text-gray-600 text-xs text-center">
+                        {/* Alinear las fechas a la izquierda */}
+                        <p className="text-gray-600 text-xs text-left">
                           📅 Fecha de Inicio: {formattedStartDate} -{" "}
                           {formattedStartTime}
                         </p>
-                        <p className="text-gray-600 text-xs text-center">
+                        <p className="text-gray-600 text-xs text-left">
                           📅 Fecha de Fin: {formattedEndDate} -{" "}
                           {formattedEndTime}
                         </p>
