@@ -40,6 +40,7 @@ const Home = () => {
   const fetchUser = async () => {
     try {
       const userData = await getLoggedUser();
+      console.log("Datos del usuario:", userData);
       setLoggedUser(userData);
       setEmail(userData.email);
       setUsername(userData.username);
@@ -191,45 +192,50 @@ const Home = () => {
 
       <div className="container mx-auto px-4 py-8">
         <div className="flex flex-col lg:flex-row gap-8">
-          {/* izquierda Column - Categorías */}
+          {/* izquierda Column - Categorías - Publicaciones Favoritas */}
           <motion.div
             initial={{ x: -100, opacity: 0 }}
             animate={{ x: 0, opacity: 1 }}
-            className="lg:w-1/4 sticky top-0"
+            className="lg:w-1/4 sticky top-0 mx-auto"
           >
-            <div className="bg-white rounded-xl shadow-lg p-6">
-              <h3 className="text-xl font-semibold mb-4">Categorías</h3>
+            {/* Categorías */}
+            <div className="bg-white rounded-xl shadow-xl p-6 transition-all duration-300 ease-in-out transform hover:scale-105">
+              <h3 className="text-2xl font-semibold text-gray-800 mb-6">
+                Categorías
+              </h3>
               <div className="flex flex-col gap-4">
                 {categories.map((category) => (
-                  <button
+                  <motion.button
                     key={category.id}
                     onClick={() => handleCategoryChange(category.id)}
-                    className={`px-4 py-2 rounded-full ${
+                    className={`px-6 py-3 rounded-full text-lg font-medium transition-all duration-300 ease-in-out ${
                       selectedCategory === category.id
-                        ? "bg-purple-600 text-white"
-                        : "bg-gray-200 text-gray-800"
+                        ? "bg-purple-600 text-white shadow-xl"
+                        : "bg-gray-200 text-gray-800 hover:bg-purple-100"
                     }`}
+                    whileHover={{ scale: 1.05 }}
                   >
                     {category.icon} {category.name}
-                  </button>
+                  </motion.button>
                 ))}
-                <button
+                <motion.button
                   onClick={() => handleCategoryChange("all")}
-                  className={`px-4 py-2 rounded-full ${
+                  className={`px-6 py-3 rounded-full text-lg font-medium transition-all duration-300 ease-in-out ${
                     selectedCategory === "all"
-                      ? "bg-purple-600 text-white"
-                      : "bg-gray-200 text-gray-800"
+                      ? "bg-purple-600 text-white shadow-xl"
+                      : "bg-gray-200 text-gray-800 hover:bg-purple-100"
                   }`}
+                  whileHover={{ scale: 1.05 }}
                 >
                   Todos
-                </button>
+                </motion.button>
               </div>
             </div>
 
-            {/* Tarjeta de publicaciones que has dado "me gusta" */}
-            <div className="bg-white rounded-xl shadow-lg p-6 mt-8">
-              <h3 className="text-xl font-semibold mb-4">
-                Publicaciones que me gustan
+            {/* Tarjeta de publicaciones favoritas */}
+            <div className="bg-white rounded-xl shadow-xl p-6 mt-8 transition-all duration-300 ease-in-out transform hover:scale-105">
+              <h3 className="text-2xl font-semibold text-gray-800 mb-6">
+                Publicaciones Favoritas
               </h3>
 
               <div className="space-y-4">
@@ -245,17 +251,17 @@ const Home = () => {
                   return (
                     <div
                       key={publication._id}
-                      className="flex items-center justify-between bg-gray-100 p-3 rounded-lg"
+                      className="flex items-center justify-between bg-gray-100 p-4 rounded-xl shadow-sm hover:shadow-md transition-shadow duration-300 ease-in-out"
                     >
                       <div className="flex items-center gap-4">
                         {/* Foto de perfil redondeada */}
                         <img
                           src={userProfilePicture}
                           alt="Perfil"
-                          className="w-10 h-10 rounded-full object-cover"
+                          className="w-12 h-12 rounded-full object-cover border-2 border-white shadow-lg"
                         />
                         {/* Título de la publicación */}
-                        <span className="text-sm font-semibold">
+                        <span className="text-md font-semibold text-gray-700">
                           {publication.titles}
                         </span>
                       </div>
@@ -264,18 +270,9 @@ const Home = () => {
                         <motion.button
                           whileTap={{ scale: 0.9 }}
                           onClick={() => handleLike(publication._id)}
-                          className="text-red-500"
+                          className="text-red-500 hover:text-red-600"
                         >
-                          <Heart size={18} />
-                        </motion.button>
-
-                        {/* X para eliminar el like */}
-                        <motion.button
-                          whileTap={{ scale: 0.9 }}
-                          onClick={() => removeLike(publication._id)}
-                          className="text-gray-500"
-                        >
-                          <span className="text-xl">❌</span>
+                          <Heart size={20} />
                         </motion.button>
                       </div>
                     </div>
@@ -289,10 +286,12 @@ const Home = () => {
           <motion.div
             initial={{ x: 100, opacity: 0 }}
             animate={{ x: 0, opacity: 1 }}
-            className="lg:w-1/3 md:w-1/2 sm:w-11/12 mx-auto overflow-y-auto max-h-[80vh] p-4"
+            className="lg:w-2/5 md:w-2/3 sm:w-11/12 mx-auto overflow-y-auto p-4"
           >
             {loadingPublications ? (
-              <p className="text-center">Cargando publicaciones...</p>
+              <p className="text-center text-lg text-gray-500">
+                Cargando publicaciones...
+              </p>
             ) : (
               <div className="flex flex-col gap-6">
                 {filteredPublications
@@ -322,20 +321,20 @@ const Home = () => {
                     return (
                       <motion.div
                         key={pub._id}
-                        className="bg-white shadow-lg rounded-lg p-5 relative w-full mx-auto"
+                        className="bg-white rounded-xl shadow-xl p-6 relative w-full mx-auto hover:shadow-2xl transition-shadow duration-300 ease-in-out"
                         initial={{ opacity: 0, scale: 0.95 }}
                         animate={{ opacity: 1, scale: 1 }}
                         transition={{ duration: 0.4 }}
                       >
                         {pub.medias?.photos?.[0]?.url && (
-                          <div className="relative w-full h-56 md:h-64 lg:h-72 overflow-hidden rounded-t-lg">
+                          <div className="relative w-full h-64 md:h-72 lg:h-80 overflow-hidden rounded-xl mb-4">
                             <img
                               src={pub.medias.photos[0].url}
                               alt={pub.titles}
-                              className="w-full h-full object-cover"
+                              className="w-full h-full object-cover rounded-lg shadow-md transition-transform duration-300 ease-in-out hover:scale-105"
                             />
                             <motion.div
-                              className="absolute bottom-2 right-2 bg-blue-400/80 text-white px-2 py-1 rounded-full text-xs font-medium shadow-md flex items-center gap-1 cursor-pointer overflow-hidden"
+                              className="absolute bottom-4 left-4 bg-blue-500/80 text-white px-3 py-2 rounded-full text-xs font-medium shadow-md flex items-center gap-1 cursor-pointer overflow-hidden"
                               initial={{ width: "2rem" }}
                               whileHover={{ width: "auto" }}
                               transition={{ duration: 0.3 }}
@@ -349,15 +348,14 @@ const Home = () => {
                             </motion.div>
                           </div>
                         )}
-                        <h3 className="font-semibold text-lg mt-3 mb-2 text-center">
+                        <h3 className="font-semibold text-xl text-center text-gray-800 mb-2">
                           {pub.titles}
                         </h3>
-                        {/* Alinear las fechas a la izquierda */}
-                        <p className="text-gray-600 text-xs text-left">
+                        <p className="text-gray-600 text-sm text-left mb-2">
                           📅 Fecha de Inicio: {formattedStartDate} -{" "}
                           {formattedStartTime}
                         </p>
-                        <p className="text-gray-600 text-xs text-left">
+                        <p className="text-gray-600 text-sm text-left">
                           📅 Fecha de Fin: {formattedEndDate} -{" "}
                           {formattedEndTime}
                         </p>
@@ -365,14 +363,14 @@ const Home = () => {
                         {/* Botón de Like en la parte inferior derecha */}
                         <motion.button
                           onClick={() => handleLike(pub._id)}
-                          className="absolute bottom-4 right-4 bg-transparent flex items-center"
+                          className="absolute bottom-6 right-6 bg-transparent flex items-center text-red-600 hover:text-red-800 transition-colors duration-300"
                         >
                           <Heart
-                            size={24}
+                            size={28}
                             className={`transition-colors ${
                               likedPublicationIds.has(pub._id)
                                 ? "text-red-600"
-                                : "text-gray-500"
+                                : "text-gray-400"
                             }`}
                           />
                         </motion.button>
@@ -386,17 +384,19 @@ const Home = () => {
           {/* derecha Column - Profile */}
           <motion.div
             initial={{ x: 100, opacity: 0 }}
-            animate={{ x: 0, opacity: 1 }}
-            className="lg:w-1/4 sticky top-0"
+            animate={{ x: -10, opacity: 1 }}
+            className="lg:w-1/4 md:w-1/3 sm:w-11/12 sticky top-0 mx-auto"
           >
             {/* Profile Card */}
-            <div className="bg-white rounded-xl shadow-lg p-6 mb-8">
+            <div className="bg-white rounded-xl shadow-2xl p-6 mb-8 transform hover:scale-105 transition duration-300 ease-in-out">
               <div className="relative mb-6">
+                {/* Foto de perfil */}
                 <img
                   src={previewImage || "/default-profile.png"}
                   alt="Profile"
-                  className="w-32 h-32 rounded-full mx-auto object-cover"
+                  className="w-32 h-32 rounded-full mx-auto object-cover border-4 border-white shadow-xl"
                 />
+                {/* Editar foto */}
                 {isEditing && (
                   <label
                     htmlFor="profilePicture"
@@ -404,7 +404,7 @@ const Home = () => {
                   >
                     <motion.div
                       whileHover={{ scale: 1.1 }}
-                      className="bg-purple-600 text-white p-2 rounded-full"
+                      className="bg-purple-600 text-white p-2 rounded-full shadow-md"
                     >
                       <Camera size={20} />
                     </motion.div>
@@ -419,29 +419,30 @@ const Home = () => {
                 )}
               </div>
 
+              {/* Formulario de edición o visualización */}
               {isEditing ? (
-                <form onSubmit={handleSubmit} className="space-y-4">
+                <form onSubmit={handleSubmit} className="space-y-6">
                   <input
                     type="text"
                     value={username}
                     onChange={(e) => setUsername(e.target.value)}
-                    className="w-full px-4 py-2 rounded-lg border focus:ring-2 focus:ring-purple-500"
+                    className="w-full px-4 py-3 rounded-lg border focus:ring-2 focus:ring-purple-500 bg-gray-100"
                     placeholder="Nombre de usuario"
                   />
                   <input
                     type="email"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    className="w-full px-4 py-2 rounded-lg border focus:ring-2 focus:ring-purple-500"
+                    className="w-full px-4 py-3 rounded-lg border focus:ring-2 focus:ring-purple-500 bg-gray-100"
                     placeholder="Email"
                   />
-                  <div className="flex gap-2">
+                  <div className="flex gap-4">
                     <motion.button
                       whileHover={{ scale: 1.05 }}
                       whileTap={{ scale: 0.95 }}
                       type="submit"
                       disabled={loading}
-                      className="flex-1 bg-purple-600 text-white py-2 rounded-lg"
+                      className="flex-1 bg-purple-600 text-white py-3 rounded-lg shadow-md"
                     >
                       {loading ? "Guardando..." : "Guardar"}
                     </motion.button>
@@ -450,7 +451,7 @@ const Home = () => {
                       whileTap={{ scale: 0.95 }}
                       type="button"
                       onClick={() => setIsEditing(false)}
-                      className="flex-1 bg-gray-200 text-gray-800 py-2 rounded-lg"
+                      className="flex-1 bg-gray-200 text-gray-800 py-3 rounded-lg shadow-md"
                     >
                       Cancelar
                     </motion.button>
@@ -458,15 +459,19 @@ const Home = () => {
                 </form>
               ) : (
                 <div className="text-center">
-                  <h2 className="text-xl font-semibold mb-2">{username}</h2>
-                  <p className="text-gray-600 mb-4">{email}</p>
+                  {/* Nombre de usuario - ahora aparece arriba del email */}
+                  <p className="text-gray-800 text-2xl font-semibold mb-2">
+                    {username}
+                  </p>
+                  <p className="text-gray-600 text-lg mb-4">{email}</p>
+
                   <motion.button
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
                     onClick={() => setIsEditing(true)}
-                    className="text-purple-600 flex items-center gap-2 mx-auto"
+                    className="text-purple-600 flex items-center gap-2 mx-auto font-medium"
                   >
-                    <Edit2 size={16} />
+                    <Edit2 size={18} />
                     Editar Perfil
                   </motion.button>
                 </div>

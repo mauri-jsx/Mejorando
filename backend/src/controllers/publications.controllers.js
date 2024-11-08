@@ -13,7 +13,7 @@ import { user } from "../models/user.model.js";
 
 export const publicationGetter = async (req, res) => {
   try {
-    const publicCollections = await publications.find().populate('idUsers', 'username email'); // Poblamos el campo idUsers
+    const publicCollections = await publications.find().populate('idUsers', 'username email');
     if (publicCollections.length === 0)
       return res.status(404).json({ message: "No hay eventos que mostrar" });
     return res.status(200).json(publicCollections);
@@ -37,7 +37,7 @@ export const postFinderById = async (req, res) => {
     const isValid = mongoose.Types.ObjectId.isValid(id);
     if (!isValid) return res.status(404).json({ message: "Invalid ID" });
 
-    const publicationsSearched = await publications.findById(id).populate('idUsers', 'username email'); // Poblamos el campo idUsers
+    const publicationsSearched = await publications.findById(id).populate('idUsers', 'username email');
     if (!publicationsSearched)
       return res.status(404).json({ message: "El evento no existe" });
 

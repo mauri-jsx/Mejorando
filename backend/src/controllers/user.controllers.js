@@ -18,7 +18,7 @@ export const register = async (req, res) => {
         .status(406)
         .json({ message: "usuario ya existe con ese email" });
 
-    const searchUsername = await user.find({ usernames: username }).exec();
+    const searchUsername = await user.find({ username: username }).exec();
 
     if (!searchUsername.length == 0)
       return res
@@ -28,9 +28,9 @@ export const register = async (req, res) => {
     const hashedPassword = await bcrypt.hash(password, 10);
 
     const newUser = new user({
-      usernames: username,
+      username: username,
       passwords: hashedPassword,
-      emails: email,
+      email: email,
     });
 
     await newUser.save();
@@ -69,7 +69,7 @@ export const register = async (req, res) => {
 export const login = async (req, res) => {
   try {
     const { email, password } = req.body;
-    const userSearched = await user.findOne({ emails: email });
+    const userSearched = await user.findOne({ email: email });
     if (!userSearched)
       return res.status(401).json({ message: "Invalid email" });
     const isValidPassword = await bcrypt.compare(
@@ -198,7 +198,7 @@ export const profileUpdater = async (req, res) => {
     const { id } = req.user;
     const { email, username } = req.body;
 
-    // Crear objeto para los campos actualizados
+    console.log("Username received in request body:", username);
     let updatedFields = {};
 
     if (email) {
@@ -212,13 +212,13 @@ export const profileUpdater = async (req, res) => {
     }
 
     if (username) {
-      const searchUsername = await user.find({ usernames: username }).exec();
+      const searchUsername = await user.find({ username: username }).exec();
       if (searchUsername.length > 0) {
         return res
           .status(406)
           .json({ message: "Usuario ya existe con ese nombre de usuario" });
       }
-      updatedFields.usernames = username;
+      updatedFields.username = username;
     }
 
     if (req.files?.media) {
@@ -250,6 +250,8 @@ export const profileUpdater = async (req, res) => {
     return res.status(200).json({
       message: "Perfil actualizado con éxito",
       profilePicture: userUpdated.profilePicture,
+      username: userUpdated.username,
+      email: userUpdated.email,
     });
   } catch (error) {
     console.error("Error en el controlador de actualización de usuario", error);

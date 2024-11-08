@@ -55,7 +55,7 @@ export const updateProfilePicture = async (formData) => {
 export const getLoggedUser = async () => {
   const response = await fetch(`${BASE_URL}/profile`, {
     method: "GET",
-    credentials: "include", // Enviar las cookies con la petición
+    credentials: "include",
   });
 
   const contentType = response.headers.get("content-type");

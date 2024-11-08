@@ -1,9 +1,9 @@
 import mongoose from "mongoose";
 mongoose.set("strictPopulate", false);
 const userModel = new mongoose.Schema({
-  usernames: { type: String, required: true, trim: true },
+  username: { type: String, required: true, trim: true },
   passwords: { type: String, required: true, trim: true },
-  emails: { type: String, required: true, trim: true },
+  email: { type: String, required: true, trim: true },
   publications: [{ type: mongoose.Schema.Types.ObjectId, ref: "Publications" }],
   likedPublications: [{ type: mongoose.Schema.Types.ObjectId, ref: "Publications" }],
   profilePicture: {
