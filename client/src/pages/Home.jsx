@@ -34,8 +34,8 @@ const Home = () => {
 
   useEffect(() => {
     fetchUser();
-    fetchPublications();
-  }, []);
+    fetchPublications(selectedCategory);
+  }, [selectedCategory]);
 
   const fetchUser = async () => {
     try {
@@ -44,7 +44,16 @@ const Home = () => {
       setEmail(userData.email);
       setUsername(userData.username);
       setPreviewImage(userData.profilePicture?.url || "/default-profile.png");
-      setLikedPublicationIds(new Set(userData.likedPublications || [])); // Traer las publicaciones que ya tienen like
+      const likedPublicationsSet = new Set(
+        userData.likedPublications.map((pub) => pub._id)
+      );
+      setLikedPublicationIds(likedPublicationsSet);
+      setPublications((prevPublications) =>
+        prevPublications.map((pub) => ({
+          ...pub,
+          liked: likedPublicationsSet.has(pub._id),
+        }))
+      );
     } catch (error) {
       console.error("Error al obtener el usuario:", error);
     }
@@ -118,10 +127,10 @@ const Home = () => {
         const newLikes = new Set(prevLikes);
         if (newLikes.has(publicationId)) {
           newLikes.delete(publicationId);
-          toast.success("¡Quito de tus publicaciones favoritas!");
+          toast.success("¡Se quitó de tus publicaciones favoritas!");
         } else {
           newLikes.add(publicationId);
-          toast.success("¡Añadido a tus publicaciones favoritas!");
+          toast.success("¡Se añadió a tus publicaciones favoritas!");
         }
         return newLikes;
       });
@@ -134,29 +143,6 @@ const Home = () => {
       );
     } catch (error) {
       toast.error("Error al alternar 'me gusta'");
-    }
-  };
-
-  const removeLike = async (publicationId) => {
-    try {
-      // Aquí llamamos a la API para eliminar el like
-      await toggleLike(publicationId); // Deberías implementar este endpoint que elimine el "me gusta" en tu API
-
-      setLikedPublicationIds((prevLikes) => {
-        const newLikes = new Set(prevLikes);
-        newLikes.delete(publicationId); // Eliminamos el "me gusta"
-        toast.success("¡Quito de tus publicaciones favoritas!");
-        return newLikes;
-      });
-
-      // Actualizamos el estado de las publicaciones
-      setPublications((prevPublications) =>
-        prevPublications.map((pub) =>
-          pub._id === publicationId ? { ...pub, liked: false } : pub
-        )
-      );
-    } catch (error) {
-      toast.error("Error al quitar el 'me gusta'");
     }
   };
 
@@ -379,21 +365,16 @@ const Home = () => {
                         {/* Botón de Like en la parte inferior derecha */}
                         <motion.button
                           onClick={() => handleLike(pub._id)}
-                          className="absolute bottom-4 right-4 bg-transparent text-red-500 flex items-center gap-2"
+                          className="absolute bottom-4 right-4 bg-transparent flex items-center"
                         >
                           <Heart
-                            size={20}
+                            size={24}
                             className={`transition-colors ${
                               likedPublicationIds.has(pub._id)
                                 ? "text-red-600"
                                 : "text-gray-500"
                             }`}
                           />
-                          <span className="text-sm">
-                            {likedPublicationIds.has(pub._id)
-                              ? "Quitar Me Gusta"
-                              : "Me gusta"}
-                          </span>
                         </motion.button>
                       </motion.div>
                     );

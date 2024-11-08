@@ -1,7 +1,8 @@
 import bcrypt from "bcrypt";
 import { IS_PRODUCTION } from "../config/config.js";
 import { user } from "../models/user.model.js";
-import color from "chalk"; // Assuming the model is named User.js
+import color from "chalk";
+import { publications } from "../models/publications.model.js";
 import generateJWT from "../helpers/generateJWT.js";
 import { uploadImage } from "../helpers/cloudinary.js";
 import fs from "fs-extra";
@@ -260,26 +261,31 @@ export const profileUpdater = async (req, res) => {
 
 export const getLoggedUser = async (req, res) => {
   try {
-    const { id } = req.user; // Asumiendo que ya has verificado el token y tienes el `id` del usuario
-
+    const { id } = req.user;
     const userLogged = await user
       .findById(id)
-      .select("username email profilePicture")
+      .select("username email profilePicture likedPublications")
       .exec();
-
     if (!userLogged) {
       return res.status(404).json({ message: "Usuario no encontrado" });
     }
+    const publicationsWithLikes = await publications
+      .find({ "_id": { $in: userLogged.likedPublications } })
+      .exec();
+    const likedPublicationIds = new Set(userLogged.likedPublications.map((pub) => pub.toString()));
 
+    const allPublications = publicationsWithLikes.map((pub) => ({
+      ...pub.toObject(),
+      liked: likedPublicationIds.has(pub._id.toString()),
+    }));
     return res.status(200).json({
       username: userLogged.username,
       email: userLogged.email,
       profilePicture: userLogged.profilePicture,
+      likedPublications: allPublications,
     });
   } catch (error) {
     console.error("Error al obtener el usuario logueado:", error);
-    return res
-      .status(500)
-      .json({ message: "Error al obtener el usuario logueado" });
+    return res.status(500).json({ message: "Error al obtener el usuario logueado" });
   }
 };

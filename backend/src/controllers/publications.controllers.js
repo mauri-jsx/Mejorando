@@ -9,6 +9,7 @@ import fs from "fs-extra";
 import { deleteImage, deleteVideo } from "../helpers/cloudinary.js";
 import { uploadImage, uploadVideo } from "../helpers/cloudinary.js";
 import color from "chalk";
+import { user } from "../models/user.model.js";
 
 export const publicationGetter = async (req, res) => {
   try {
@@ -306,24 +307,29 @@ export const toggleLike = async (req, res) => {
     const { id } = req.params;
     const userId = req.user?._id;
     if (!userId) return res.status(401).json({ message: "Usuario no autenticado" });
-
     const publication = await publications.findById(id);
     if (!publication) return res.status(404).json({ message: "Publicación no encontrada" });
+    const userLogged = await user.findById(userId);
+    if (!userLogged) return res.status(404).json({ message: "Usuario no encontrado" });
+    const isLiked = userLogged.likedPublications.includes(publication._id);
 
-    const isLiked = publication.likes.includes(userId);
     if (isLiked) {
-      publication.likes = publication.likes.filter((likeId) => !likeId.equals(userId));
+      userLogged.likedPublications = userLogged.likedPublications.filter(
+        (pubId) => !pubId.equals(publication._id)
+      );
     } else {
-      publication.likes.push(userId);
+      userLogged.likedPublications.push(publication._id);
     }
-    await publication.save();
-
+    await userLogged.save();
     res.status(200).json({
       message: isLiked ? "Like eliminado" : "Like agregado",
       likesCount: publication.likes.length,
+      liked: !isLiked,
     });
   } catch (error) {
     console.error("Error al dar o quitar like", error);
     res.status(500).json({ message: "Error al actualizar el estado de like" });
   }
 };
+
+
