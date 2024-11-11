@@ -197,8 +197,6 @@ export const profileUpdater = async (req, res) => {
   try {
     const { id } = req.user;
     const { email, username } = req.body;
-
-    console.log("Username received in request body:", username);
     let updatedFields = {};
 
     if (email) {

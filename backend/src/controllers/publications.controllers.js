@@ -62,22 +62,15 @@ export const postCreator = async (req, res) => {
     const { titles, descriptions, category, startDates, endDates } = req.body;
     const { lat, long } = JSON.parse(req.body.locations);
     const idUser = req.user._id;
-
-    // Validar campos obligatorios
     if (!titles || !descriptions || !lat || !long || !category || !startDates || !endDates) {
       return res.status(400).json({ message: "Faltan campos obligatorios" });
     }
-
     const mediaFiles = req.files?.media ? (Array.isArray(req.files.media) ? req.files.media : [req.files.media]) : [];
-    console.log('Media Files:', mediaFiles);
-
     const photos = [];
     const videos = [];
-
     if (mediaFiles.length > 0) {
       await Promise.all(mediaFiles.map(async (file) => {
         try {
-          console.log('Processing file:', file);
           let result;
           if (file.mimetype.startsWith("image/")) {
             result = await uploadImage(file.tempFilePath);
@@ -87,14 +80,12 @@ export const postCreator = async (req, res) => {
             videos.push({ _id: new mongoose.Types.ObjectId().toString(), url: result.secure_url }); // Agrega objeto de video
           }
         } catch (uploadError) {
-          console.error("Error al procesar el archivo:", uploadError);
           throw new Error("Error al procesar el archivo multimedia");
         }
       }));
     } else {
       console.log('No media files to process.');
     }
-
     const newPublication = new publications({
       titles,
       idUsers: idUser,
@@ -108,10 +99,7 @@ export const postCreator = async (req, res) => {
         videos,
       },
     });
-
     await newPublication.save();
-
-    // Mover la eliminación de archivos aquí para asegurarte de que solo se eliminen si la creación fue exitosa
     await Promise.all(mediaFiles.map(file => fs.unlink(file.tempFilePath)));
 
     return res.status(201).json({ message: "Publicación creada exitosamente", publicationId: newPublication._id });
@@ -290,7 +278,6 @@ export const postRemover = async (req, res) => {
 export const categoryPostGetter = async (req, res) => {
   try {
     const { category } = req.params;
-    console.log("Categoría buscada:", category);
     const publicationsSearched = await publications
       .find({ category: category })
       .populate('idUsers', 'username profilePicture');
