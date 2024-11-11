@@ -161,36 +161,28 @@ const Home = () => {
       <motion.nav
         initial={{ y: -100 }}
         animate={{ y: 0 }}
-        className="bg-white px-6 py-2 flex justify-between items-center rounded-lg shadow-md"
+        className="bg-white shadow-md px-8 py-4 flex justify-center items-center"
       >
-        {/* Logo - A la izquierda y más grande */}
-        <motion.div whileHover={{ scale: 1.05 }} className="flex items-center">
-          <img
-            src={logo}
-            alt="ViewsEvents Logo"
-            className="h-20 md:h-24" // Hacemos el logo más grande
-          />
+        <motion.div whileHover={{ scale: 1.05 }} className="mr-auto">
+          <img src={logo} alt="ViewsEvents Logo" className="h-20" />
         </motion.div>
-
-        {/* Botones de Navegación */}
-        <div className="flex items-center gap-4">
-          {/* Reducimos el gap entre botones */}
+        <div className="flex items-center gap-4 ml-auto">
           <motion.button
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
             onClick={() => navigate("/publish")}
-            className="bg-gradient-to-r from-purple-600 to-blue-600 text-white px-4 py-2 rounded-full flex items-center gap-2 hover:scale-105 transition-all duration-300"
+            className="bg-gradient-to-r from-purple-600 to-blue-600 text-white px-4 py-2 rounded-lg flex items-center gap-2"
           >
-            <Plus size={18} /> {/* Reducimos el tamaño del icono */}
+            <Plus size={20} />
             Crear Publicación
           </motion.button>
           <motion.button
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
             onClick={handleLogout}
-            className="bg-red-500 text-white px-4 py-2 rounded-full flex items-center gap-2 hover:scale-105 transition-all duration-300"
+            className="bg-red-500 text-white px-4 py-2 rounded-lg flex items-center gap-2"
           >
-            <LogOut size={18} /> {/* Reducimos el tamaño del icono */}
+            <LogOut size={20} />
             Cerrar Sesión
           </motion.button>
         </div>
@@ -292,7 +284,7 @@ const Home = () => {
           <motion.div
             initial={{ x: 100, opacity: 0 }}
             animate={{ x: 0, opacity: 1 }}
-            className="lg:w-2/5 md:w-2/3 sm:w-11/12 mx-auto overflow-y-auto p-4"
+            className="lg:w-2/5 md:w-2/3 sm:w-11/12 mx-auto overflow-y-auto p-4 mt-[-11px]"
           >
             {loadingPublications ? (
               <p className="text-center text-lg text-gray-500">
@@ -371,14 +363,15 @@ const Home = () => {
                           onClick={() => handleLike(pub._id)}
                           className="absolute bottom-6 right-6 bg-transparent flex items-center text-red-600 hover:text-red-800 transition-colors duration-300"
                         >
-                          <Heart
-                            size={28}
-                            className={`transition-colors ${
-                              likedPublicationIds.has(pub._id)
-                                ? "text-red-600"
-                                : "text-gray-400"
-                            }`}
-                          />
+                          {/* Aquí cambiamos el renderizado entre Heart (icono) y ❤️ (emoji) */}
+                          {likedPublicationIds.has(pub._id) ? (
+                            <span className="text-2xl">❤️</span>
+                          ) : (
+                            <Heart
+                              size={28}
+                              className="transition-colors text-gray-400 hover:text-red-600"
+                            />
+                          )}
                         </motion.button>
                       </motion.div>
                     );
