@@ -9,6 +9,7 @@ import {
   toggleLike,
 } from "../api/publish";
 import { toast, Toaster } from "react-hot-toast";
+import logo from "../assets/Logo1.png";
 
 const Home = () => {
   const [email, setEmail] = useState("");
@@ -160,31 +161,36 @@ const Home = () => {
       <motion.nav
         initial={{ y: -100 }}
         animate={{ y: 0 }}
-        className="bg-white shadow-md px-8 py-4 flex justify-between items-center"
+        className="bg-white px-6 py-2 flex justify-between items-center rounded-lg shadow-md"
       >
-        <motion.h1
-          className="text-2xl font-bold bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent"
-          whileHover={{ scale: 1.05 }}
-        >
-          ViewsEvents
-        </motion.h1>
+        {/* Logo - A la izquierda y más grande */}
+        <motion.div whileHover={{ scale: 1.05 }} className="flex items-center">
+          <img
+            src={logo}
+            alt="ViewsEvents Logo"
+            className="h-20 md:h-24" // Hacemos el logo más grande
+          />
+        </motion.div>
+
+        {/* Botones de Navegación */}
         <div className="flex items-center gap-4">
+          {/* Reducimos el gap entre botones */}
           <motion.button
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
             onClick={() => navigate("/publish")}
-            className="bg-gradient-to-r from-purple-600 to-blue-600 text-white px-4 py-2 rounded-lg flex items-center gap-2"
+            className="bg-gradient-to-r from-purple-600 to-blue-600 text-white px-4 py-2 rounded-full flex items-center gap-2 hover:scale-105 transition-all duration-300"
           >
-            <Plus size={20} />
+            <Plus size={18} /> {/* Reducimos el tamaño del icono */}
             Crear Publicación
           </motion.button>
           <motion.button
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
             onClick={handleLogout}
-            className="bg-red-500 text-white px-4 py-2 rounded-lg flex items-center gap-2"
+            className="bg-red-500 text-white px-4 py-2 rounded-full flex items-center gap-2 hover:scale-105 transition-all duration-300"
           >
-            <LogOut size={20} />
+            <LogOut size={18} /> {/* Reducimos el tamaño del icono */}
             Cerrar Sesión
           </motion.button>
         </div>
