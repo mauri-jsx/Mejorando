@@ -68,6 +68,7 @@ const Home = () => {
         category === "all"
           ? await fetchAllPublications()
           : await fetchPublicationsByCategory(category);
+
       setPublications(data);
     } catch (error) {
       toast.error("Error al cargar publicaciones");
@@ -245,7 +246,7 @@ const Home = () => {
                   if (!publication) return null;
 
                   const userProfilePicture =
-                    loggedUser?.profilePicture?.url || "/default-profile.png"; // Foto de perfil del usuario
+                    loggedUser?.profilePicture?.url || "/default-profile.png";
                   return (
                     <div
                       key={publication._id}
@@ -284,7 +285,7 @@ const Home = () => {
           <motion.div
             initial={{ x: 100, opacity: 0 }}
             animate={{ x: 0, opacity: 1 }}
-            className="lg:w-2/5 md:w-2/3 sm:w-11/12 mx-auto overflow-y-auto p-4 mt-[-11px]"
+            className="lg:w-2/5 md:w-2/3 sm:w-11/12 mx-auto overflow-y-auto  "
           >
             {loadingPublications ? (
               <p className="text-center text-lg text-gray-500">
@@ -315,7 +316,7 @@ const Home = () => {
                     const categoryData = categories.find(
                       (cat) => cat.id === pub.category
                     );
-
+                    const user = pub.idUsers || {};
                     return (
                       <motion.div
                         key={pub._id}
@@ -324,6 +325,21 @@ const Home = () => {
                         animate={{ opacity: 1, scale: 1 }}
                         transition={{ duration: 0.4 }}
                       >
+                        {/* Información del creador de la publicación */}
+                        <div className="flex items-center gap-4 mb-4">
+                          <img
+                            src={
+                              user.profilePicture?.url || "/default-profile.png"
+                            }
+                            alt={user.username || "Usuario desconocido"}
+                            className="w-12 h-12 rounded-full object-cover border-2 border-white shadow-lg"
+                          />
+                          <span className="text-lg font-semibold text-gray-700">
+                            {user.username || "Usuario desconocido"}
+                          </span>
+                        </div>
+
+                        {/* Imagen de la publicación */}
                         {pub.medias?.photos?.[0]?.url && (
                           <div className="relative w-full h-64 md:h-72 lg:h-80 overflow-hidden rounded-xl mb-4">
                             <img
@@ -346,9 +362,13 @@ const Home = () => {
                             </motion.div>
                           </div>
                         )}
+
+                        {/* Título de la publicación */}
                         <h3 className="font-semibold text-xl text-center text-gray-800 mb-2">
                           {pub.titles}
                         </h3>
+
+                        {/* Fechas */}
                         <p className="text-gray-600 text-sm text-left mb-2">
                           📅 Fecha de Inicio: {formattedStartDate} -{" "}
                           {formattedStartTime}
@@ -358,12 +378,11 @@ const Home = () => {
                           {formattedEndTime}
                         </p>
 
-                        {/* Botón de Like en la parte inferior derecha */}
+                        {/* Botón de Like */}
                         <motion.button
                           onClick={() => handleLike(pub._id)}
                           className="absolute bottom-6 right-6 bg-transparent flex items-center text-red-600 hover:text-red-800 transition-colors duration-300"
                         >
-                          {/* Aquí cambiamos el renderizado entre Heart (icono) y ❤️ (emoji) */}
                           {likedPublicationIds.has(pub._id) ? (
                             <span className="text-2xl">❤️</span>
                           ) : (

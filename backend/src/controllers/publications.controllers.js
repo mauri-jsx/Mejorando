@@ -13,7 +13,7 @@ import { user } from "../models/user.model.js";
 
 export const publicationGetter = async (req, res) => {
   try {
-    const publicCollections = await publications.find().populate('idUsers', 'username email');
+    const publicCollections = await publications.find().populate('idUsers', 'username email profilePicture');
     if (publicCollections.length === 0)
       return res.status(404).json({ message: "No hay eventos que mostrar" });
     return res.status(200).json(publicCollections);
@@ -291,7 +291,9 @@ export const categoryPostGetter = async (req, res) => {
   try {
     const { category } = req.params;
     console.log("Categoría buscada:", category);
-    const publicationsSearched = await publications.find({ category: category }).exec();
+    const publicationsSearched = await publications
+      .find({ category: category })
+      .populate('idUsers', 'username profilePicture');
     if (!publicationsSearched.length) {
       return res.status(404).json({ message: "No hay eventos con esa categoría" });
     }
@@ -301,6 +303,7 @@ export const categoryPostGetter = async (req, res) => {
     return res.status(500).json({ message: "Error inesperado en el servidor" });
   }
 };
+
 
 export const toggleLike = async (req, res) => {
   try {
