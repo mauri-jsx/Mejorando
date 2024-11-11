@@ -2,8 +2,9 @@ import { useState } from "react";
 import { Music, Heart, Palette, Users } from "lucide-react";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-import { createPublication } from "../api/publish"; // Asegúrate de que la ruta sea correcta
-import Map from "../components/Map"; // Importar el componente de mapa
+import { createPublication } from "../api/publish";
+import Map from "../components/Map";
+import { Loader } from "lucide-react";
 
 const CATEGORIES = [
   {
@@ -39,6 +40,7 @@ const Publish = () => {
   });
   const [mediaFiles, setMediaFiles] = useState({ photos: [], videos: [] });
   const [validationErrors, setValidationErrors] = useState({});
+  const [loading, setLoading] = useState(false);
 
   const validateForm = () => {
     const errors = {};
@@ -57,10 +59,7 @@ const Publish = () => {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
+    setFormData((prev) => ({ ...prev, [name]: value }));
     setValidationErrors((prev) => ({ ...prev, [name]: undefined }));
   };
 
@@ -82,10 +81,7 @@ const Publish = () => {
   };
 
   const handleAddressUpdate = (lat, long) => {
-    setFormData((prev) => ({
-      ...prev,
-      locations: { lat, long },
-    }));
+    setFormData((prev) => ({ ...prev, locations: { lat, long } }));
   };
 
   const handleSubmit = async (e) => {
@@ -108,10 +104,19 @@ const Publish = () => {
     mediaFiles.photos.forEach((file) => submissionData.append("media", file));
     mediaFiles.videos.forEach((file) => submissionData.append("media", file));
 
+    // Mostrar el toast de carga
+    const loadingToast = toast.loading("Subiendo publicación...");
+
     try {
+      setLoading(true); // Activar la carga
       const response = await createPublication(submissionData);
       if (response && response.message === "Publicación creada exitosamente") {
-        toast.success("¡Publicación creada exitosamente!");
+        toast.update(loadingToast, {
+          render: "¡Publicación creada exitosamente!",
+          type: "success",
+          isLoading: false,
+          autoClose: 3000,
+        });
         // Reiniciar el formulario
         setFormData({
           titles: "",
@@ -124,10 +129,22 @@ const Publish = () => {
         });
         setMediaFiles({ photos: [], videos: [] });
       } else {
-        toast.error("Error al crear la publicación");
+        toast.update(loadingToast, {
+          render: "Error al crear la publicación",
+          type: "error",
+          isLoading: false,
+          autoClose: 3000,
+        });
       }
     } catch (err) {
-      toast.error("Error al crear la publicación");
+      toast.update(loadingToast, {
+        render: "Error al crear la publicación",
+        type: "error",
+        isLoading: false,
+        autoClose: 3000,
+      });
+    } finally {
+      setLoading(false); // Desactivar la carga
     }
   };
 
