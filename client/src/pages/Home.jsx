@@ -285,7 +285,7 @@ const Home = () => {
           <motion.div
             initial={{ x: 100, opacity: 0 }}
             animate={{ x: 0, opacity: 1 }}
-            className="lg:w-2/5 md:w-2/3 sm:w-11/12 mx-auto overflow-y-auto  "
+            className="lg:w-2/5 md:w-2/3 sm:w-11/12 mx-auto overflow-y-auto"
           >
             {loadingPublications ? (
               <p className="text-center text-lg text-gray-500">
@@ -317,6 +317,7 @@ const Home = () => {
                       (cat) => cat.id === pub.category
                     );
                     const user = pub.idUsers || {};
+
                     return (
                       <motion.div
                         key={pub._id}
@@ -339,7 +340,7 @@ const Home = () => {
                           </span>
                         </div>
 
-                        {/* Imagen de la publicación */}
+                        {/* Medios de la publicación (imagen o video) */}
                         {pub.medias?.photos?.[0]?.url && (
                           <div className="relative w-full h-64 md:h-72 lg:h-80 overflow-hidden rounded-xl mb-4">
                             <img
@@ -347,6 +348,88 @@ const Home = () => {
                               alt={pub.titles}
                               className="w-full h-full object-cover rounded-lg shadow-md transition-transform duration-300 ease-in-out hover:scale-105"
                             />
+                            <motion.div
+                              className="absolute bottom-4 left-4 bg-blue-500/80 text-white px-3 py-2 rounded-full text-xs font-medium shadow-md flex items-center gap-1 cursor-pointer overflow-hidden"
+                              initial={{ width: "2rem" }}
+                              whileHover={{ width: "auto" }}
+                              transition={{ duration: 0.3 }}
+                            >
+                              <span className="text-lg opacity-90">
+                                {categoryData?.icon || "🎉"}
+                              </span>
+                              <span className="ml-1 whitespace-nowrap">
+                                {categoryData?.name || "Categoría"}
+                              </span>
+                            </motion.div>
+                          </div>
+                        )}
+
+                        {pub.medias?.videos?.[0]?.url && (
+                          <div
+                            className="relative w-full h-64 md:h-72 lg:h-80 overflow-hidden rounded-xl mb-4 group"
+                            // Añadimos la clase 'group' al contenedor para detectar el hover
+                          >
+                            <video
+                              autoPlay
+                              loop
+                              muted={false} // Inicialmente no estará en mute, controlaremos esto
+                              className="w-full h-full object-cover rounded-lg shadow-md transition-transform duration-300 ease-in-out hover:scale-105"
+                              onClick={(e) => {
+                                // Pausar o reproducir el video al hacer clic
+                                if (e.target.paused) {
+                                  e.target.play();
+                                } else {
+                                  e.target.pause();
+                                }
+                              }}
+                              ref={(videoElement) => {
+                                if (videoElement) {
+                                  // Ajusta el volumen al volumen predeterminado del navegador.
+                                  videoElement.volume = 0.5; // Puedes ajustar este valor si deseas un volumen más bajo o alto.
+                                }
+                              }}
+                            >
+                              <source
+                                src={pub.medias.videos[0].url}
+                                type="video/mp4"
+                              />
+                              Tu navegador no soporta el elemento de video.
+                            </video>
+
+                            {/* Control de volumen personalizado, solo visible al hacer hover */}
+                            <div
+                              className="absolute bottom-4 right-4 flex items-center space-x-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+                              style={{ transition: "opacity 0.3s" }}
+                            >
+                              {/* Botón de mute/desmute */}
+                              <button
+                                onClick={(e) => {
+                                  const video =
+                                    e.target.closest("div").previousSibling;
+                                  video.muted = !video.muted;
+                                }}
+                                className="text-white bg-blue-500 p-2 rounded-full hover:bg-blue-600"
+                              >
+                                {/* Icono de mute/desmute */}
+                                {pub.medias.videos[0].muted ? "🔇" : "🔊"}
+                              </button>
+
+                              {/* Barra de volumen personalizada */}
+                              <input
+                                type="range"
+                                min="0"
+                                max="1"
+                                step="0.01"
+                                defaultValue="0.5"
+                                onChange={(e) => {
+                                  const video =
+                                    e.target.closest("div").previousSibling;
+                                  video.volume = e.target.value;
+                                }}
+                                className="w-20 h-1 bg-gray-300 rounded-lg"
+                              />
+                            </div>
+
                             <motion.div
                               className="absolute bottom-4 left-4 bg-blue-500/80 text-white px-3 py-2 rounded-full text-xs font-medium shadow-md flex items-center gap-1 cursor-pointer overflow-hidden"
                               initial={{ width: "2rem" }}
