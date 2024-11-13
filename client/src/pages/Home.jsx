@@ -3,10 +3,12 @@ import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { Edit2, LogOut, Plus, Camera, Heart } from "lucide-react";
 import { updateProfilePicture, getLoggedUser, logoutUser } from "../api/auth";
+import { MoreVertical, Trash } from "react-feather";
 import {
   fetchAllPublications,
   fetchPublicationsByCategory,
   toggleLike,
+  deletePublication,
 } from "../api/publish";
 import { toast, Toaster } from "react-hot-toast";
 import logo from "../assets/Logo1.png";
@@ -23,6 +25,7 @@ const Home = () => {
   const [selectedCategory, setSelectedCategory] = useState("all");
   const [isEditing, setIsEditing] = useState(false);
   const [likedPublicationIds, setLikedPublicationIds] = useState(new Set());
+  const [isMenuOpen, setIsMenuOpen] = useState(null);
 
   const navigate = useNavigate();
 
@@ -68,12 +71,29 @@ const Home = () => {
         category === "all"
           ? await fetchAllPublications()
           : await fetchPublicationsByCategory(category);
-
-      setPublications(data);
+      if (data && data.length === 0) {
+        setPublications([]);
+      } else {
+        setPublications(data);
+      }
     } catch (error) {
-      toast.error("Error al cargar publicaciones");
+      if (error.message && error.message !== "No publications found") {
+        toast.error("Error al cargar publicaciones");
+      }
     } finally {
       setLoadingPublications(false);
+    }
+  };
+
+  const handleDelete = async (publicationId) => {
+    try {
+      await deletePublication(publicationId);
+      toast.success("Publicación eliminada exitosamente");
+      setPublications((prevPublications) =>
+        prevPublications.filter((pub) => pub._id !== publicationId)
+      );
+    } catch (error) {
+      toast.error("Error al eliminar la publicación");
     }
   };
 
@@ -291,6 +311,10 @@ const Home = () => {
               <p className="text-center text-lg text-gray-500">
                 Cargando publicaciones...
               </p>
+            ) : filteredPublications.length === 0 ? (
+              <p className="text-center text-lg text-gray-500">
+                No hay publicaciones subidas
+              </p>
             ) : (
               <div className="flex flex-col gap-6">
                 {filteredPublications
@@ -326,6 +350,30 @@ const Home = () => {
                         animate={{ opacity: 1, scale: 1 }}
                         transition={{ duration: 0.4 }}
                       >
+                        <div className="absolute top-4 right-4">
+                          <motion.button
+                            onClick={() =>
+                              setIsMenuOpen(
+                                isMenuOpen === pub._id ? null : pub._id
+                              )
+                            }
+                            className="text-gray-600 hover:text-gray-800"
+                          >
+                            <MoreVertical size={20} />
+                          </motion.button>
+                          {/* Menú de opciones */}
+                          {isMenuOpen === pub._id && (
+                            <div className="absolute top-8 right-0 bg-white shadow-lg rounded-md w-40">
+                              <button
+                                onClick={() => handleDelete(pub._id)}
+                                className="w-full px-4 py-2 text-red-500 hover:bg-red-100 text-left flex items-center gap-2"
+                              >
+                                <Trash size={16} />
+                                Eliminar
+                              </button>
+                            </div>
+                          )}
+                        </div>
                         {/* Información del creador de la publicación */}
                         <div className="flex items-center gap-4 mb-4">
                           <img
@@ -365,17 +413,13 @@ const Home = () => {
                         )}
 
                         {pub.medias?.videos?.[0]?.url && (
-                          <div
-                            className="relative w-full h-64 md:h-72 lg:h-80 overflow-hidden rounded-xl mb-4 group"
-                            // Añadimos la clase 'group' al contenedor para detectar el hover
-                          >
+                          <div className="relative w-full h-64 md:h-72 lg:h-80 overflow-hidden rounded-xl mb-4 group">
                             <video
                               autoPlay
                               loop
-                              muted={false} // Inicialmente no estará en mute, controlaremos esto
+                              muted={false}
                               className="w-full h-full object-cover rounded-lg shadow-md transition-transform duration-300 ease-in-out hover:scale-105"
                               onClick={(e) => {
-                                // Pausar o reproducir el video al hacer clic
                                 if (e.target.paused) {
                                   e.target.play();
                                 } else {
@@ -384,8 +428,7 @@ const Home = () => {
                               }}
                               ref={(videoElement) => {
                                 if (videoElement) {
-                                  // Ajusta el volumen al volumen predeterminado del navegador.
-                                  videoElement.volume = 0.5; // Puedes ajustar este valor si deseas un volumen más bajo o alto.
+                                  videoElement.volume = 0.5;
                                 }
                               }}
                             >
@@ -493,7 +536,10 @@ const Home = () => {
               <div className="relative mb-6">
                 {/* Foto de perfil */}
                 <img
-                  src={previewImage || "/default-profile.png"}
+                  src={
+                    previewImage ||
+                    "https://i.pinimg.com/564x/13/b4/08/13b408f0ad453542c0d8fa8e62602245.jpg"
+                  }
                   alt="Profile"
                   className="w-32 h-32 rounded-full mx-auto object-cover border-4 border-white shadow-xl"
                 />
