@@ -150,4 +150,19 @@ export const toggleLike = async (postId) => {
   }
 };
 
+// Fetch para obtener todas las publicaciones de un usuario
+export const fetchUserPublications = async () => {
+  try {
+    const response = await fetch(`${API_URL}/user`, {
+      method: "GET",
+      credentials: "include",
+      headers: getHeaders(),
+    });
+    if (!response.ok) await handleFetchError(response);
+    return await response.json();
+  } catch (error) {
+    console.error("Error fetching user publications:", error);
+    throw error;
+  }
+};
 

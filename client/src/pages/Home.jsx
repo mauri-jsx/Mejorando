@@ -9,6 +9,7 @@ import {
   fetchPublicationsByCategory,
   toggleLike,
   deletePublication,
+  fetchUserPublications,
 } from "../api/publish";
 import { toast, Toaster } from "react-hot-toast";
 import logo from "../assets/Logo1.png";
@@ -39,7 +40,21 @@ const Home = () => {
   useEffect(() => {
     fetchUser();
     fetchPublications(selectedCategory);
+    fetchUserPosts();
   }, [selectedCategory]);
+
+  const fetchUserPosts = async () => {
+    try {
+      const data = await fetchUserPublications();
+      if (data && data.length > 0) {
+        setPublications(data);
+      } else {
+        setPublications([]);
+      }
+    } catch (error) {
+      toast.error("Error al cargar las publicaciones del usuario");
+    }
+  };
 
   const fetchUser = async () => {
     try {
@@ -350,30 +365,6 @@ const Home = () => {
                         animate={{ opacity: 1, scale: 1 }}
                         transition={{ duration: 0.4 }}
                       >
-                        <div className="absolute top-4 right-4">
-                          <motion.button
-                            onClick={() =>
-                              setIsMenuOpen(
-                                isMenuOpen === pub._id ? null : pub._id
-                              )
-                            }
-                            className="text-gray-600 hover:text-gray-800"
-                          >
-                            <MoreVertical size={20} />
-                          </motion.button>
-                          {/* Menú de opciones */}
-                          {isMenuOpen === pub._id && (
-                            <div className="absolute top-8 right-0 bg-white shadow-lg rounded-md w-40">
-                              <button
-                                onClick={() => handleDelete(pub._id)}
-                                className="w-full px-4 py-2 text-red-500 hover:bg-red-100 text-left flex items-center gap-2"
-                              >
-                                <Trash size={16} />
-                                Eliminar
-                              </button>
-                            </div>
-                          )}
-                        </div>
                         {/* Información del creador de la publicación */}
                         <div className="flex items-center gap-4 mb-4">
                           <img
@@ -621,6 +612,53 @@ const Home = () => {
                     <Edit2 size={18} />
                     Editar Perfil
                   </motion.button>
+                </div>
+              )}
+            </div>
+            {/* Mis Publicaciones */}
+            <div className="bg-white rounded-xl shadow-2xl p-6 mb-8">
+              <h2 className="text-2xl font-semibold text-gray-800 mb-4">
+                Mis Publicaciones
+              </h2>
+              {publications.length > 0 ? (
+                publications.map((publication) => (
+                  <div
+                    key={publication._id}
+                    className="bg-white rounded-xl shadow-md p-4 mb-4 flex justify-between items-center"
+                  >
+                    <div>
+                      <h3 className="text-lg font-semibold">
+                        {publication.titles}
+                      </h3>
+                    </div>
+                    {/* Opciones (3 puntos) */}
+                    <div className="relative">
+                      <button
+                        onClick={() =>
+                          setIsMenuOpen((prev) =>
+                            prev === publication._id ? null : publication._id
+                          )
+                        }
+                      >
+                        <MoreVertical size={20} className="text-gray-600" />
+                      </button>
+
+                      {isMenuOpen === publication._id && (
+                        <div className="absolute right-0 mt-2 bg-white shadow-lg rounded-md w-32">
+                          <button
+                            onClick={() => handleDelete(publication._id)}
+                            className="block w-full px-4 py-2 text-left text-red-600 hover:bg-gray-200"
+                          >
+                            Eliminar
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <div className="text-center text-gray-500 opacity-75">
+                  <p>No tienes publicaciones aún.</p>
                 </div>
               )}
             </div>
