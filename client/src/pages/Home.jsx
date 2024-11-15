@@ -2,14 +2,18 @@ import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { Edit2, LogOut, Plus, Camera, Heart } from "lucide-react";
-import { updateProfilePicture, getLoggedUser, logoutUser } from "../api/auth";
+import {
+  updateProfilePicture,
+  getLoggedUser,
+  logoutUser,
+  getUserPublications,
+} from "../api/auth";
 import { MoreVertical, Trash } from "react-feather";
 import {
   fetchAllPublications,
   fetchPublicationsByCategory,
   toggleLike,
   deletePublication,
-  fetchUserPublications,
 } from "../api/publish";
 import { toast, Toaster } from "react-hot-toast";
 import logo from "../assets/Logo1.png";
@@ -27,6 +31,8 @@ const Home = () => {
   const [isEditing, setIsEditing] = useState(false);
   const [likedPublicationIds, setLikedPublicationIds] = useState(new Set());
   const [isMenuOpen, setIsMenuOpen] = useState(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [userPublications, setUserPublications] = useState(false);
 
   const navigate = useNavigate();
 
@@ -44,15 +50,20 @@ const Home = () => {
   }, [selectedCategory]);
 
   const fetchUserPosts = async () => {
+    setLoading(true);
     try {
-      const data = await fetchUserPublications();
-      if (data && data.length > 0) {
-        setPublications(data);
+      const response = await getUserPublications();
+      console.log("Publicaciones del usuario:", response);
+      if (response && response.length > 0) {
+        setUserPublications(response);
       } else {
         setPublications([]);
       }
     } catch (error) {
+      console.error("Error fetching user posts:", error);
       toast.error("Error al cargar las publicaciones del usuario");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -84,7 +95,7 @@ const Home = () => {
     try {
       const data =
         category === "all"
-          ? await fetchAllPublications()
+          ? await fetchAllPublications() // traer fetch de publicaicones por id
           : await fetchPublicationsByCategory(category);
       if (data && data.length === 0) {
         setPublications([]);
@@ -516,7 +527,7 @@ const Home = () => {
             )}
           </motion.div>
 
-          {/* derecha Column - Profile */}
+          {/* derecha Column - Profile - Mis publicaciones */}
           <motion.div
             initial={{ x: 100, opacity: 0 }}
             animate={{ x: -10, opacity: 1 }}
@@ -620,17 +631,23 @@ const Home = () => {
               <h2 className="text-2xl font-semibold text-gray-800 mb-4">
                 Mis Publicaciones
               </h2>
-              {publications.length > 0 ? (
-                publications.map((publication) => (
+              {userPublications.length > 0 ? (
+                userPublications.map((publication) => (
                   <div
                     key={publication._id}
                     className="bg-white rounded-xl shadow-md p-4 mb-4 flex justify-between items-center"
                   >
-                    <div>
+                    <div className="flex items-center">
+                      <span className="text-2xl mr-2">
+                        {categories.find(
+                          (category) => category.id === publication.category
+                        )?.icon || "🎉"}
+                      </span>
                       <h3 className="text-lg font-semibold">
-                        {publication.titles}
+                        {publication.titles}{" "}
                       </h3>
                     </div>
+
                     {/* Opciones (3 puntos) */}
                     <div className="relative">
                       <button

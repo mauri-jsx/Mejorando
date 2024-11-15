@@ -321,25 +321,8 @@ export const toggleLike = async (req, res) => {
   }
 };
 
-export const userPublications = async (req, res) => {
-  try {
-    const userId = req.user._id; // Asumiendo que el id del usuario está en req.user._id
 
-    // Buscar todas las publicaciones de este usuario
-    const userPublications = await publications
-      .find({ idUsers: userId }) // Filtrar las publicaciones por el id del usuario
-      .populate('idUsers', 'username email profilePicture'); // Puedes personalizar lo que deseas retornar del usuario
 
-    if (!userPublications || userPublications.length === 0) {
-      return res.status(404).json({ message: "No tienes publicaciones aún" });
-    }
-
-    return res.status(200).json(userPublications); // Retornar las publicaciones encontradas
-  } catch (error) {
-    console.error("Error al obtener las publicaciones del usuario", error);
-    return res.status(500).json({ message: "Error inesperado al obtener las publicaciones" });
-  }
-};
 
 
 

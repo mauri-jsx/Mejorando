@@ -66,3 +66,19 @@ export const getLoggedUser = async () => {
     throw new Error(`Error: ${errorText}`);
   }
 };
+
+
+export const getUserPublications = async () => {
+  const response = await fetch(`${BASE_URL}/publications/user`, {
+    method: "GET",
+    credentials: "include",
+  });
+  const contentType = response.headers.get("content-type");
+  if (contentType && contentType.includes("application/json")) {
+    return response.json();
+  } else {
+    const errorText = await response.text();
+    throw new Error(`Error: ${errorText}`);
+  }
+};
+

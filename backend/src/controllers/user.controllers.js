@@ -289,3 +289,23 @@ export const getLoggedUser = async (req, res) => {
     return res.status(500).json({ message: "Error al obtener el usuario logueado" });
   }
 };
+
+export const getUserPublications = async (req, res) => {
+  try {
+    const userId = req.user?._id;
+    if (!userId) {
+      return res.status(401).json({ message: "Usuario no autenticado" });
+    }
+    const userPublications = await publications
+      .find({ idUsers: userId })
+      .populate('idUsers', 'username email profilePicture');
+    if (userPublications.length === 0) {
+      return res.status(404).json({ message: "No tienes publicaciones" });
+    }
+    return res.status(200).json(userPublications);
+  } catch (error) {
+    console.error("Error al obtener publicaciones del usuario", error);
+    return res.status(500).json({ message: "Error inesperado en el servidor. Intente más tarde" });
+  }
+};
+
