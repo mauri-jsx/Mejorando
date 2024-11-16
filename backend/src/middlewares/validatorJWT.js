@@ -10,7 +10,6 @@ export default async (req, res, next) => {
       return res.status(403).json({ message: "No tienes autorización, token faltante" });
     }
     const decoded = jwt.verify(token, SECRET_KEY);
-    console.log("Decoded token:", decoded);
     const userSearched = await user.findById(decoded.id).exec();
     if (!userSearched) {
       return res.status(401).json({ message: "Usuario no encontrado o eliminado" });

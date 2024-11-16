@@ -31,7 +31,6 @@ const Home = () => {
   const [isEditing, setIsEditing] = useState(false);
   const [likedPublicationIds, setLikedPublicationIds] = useState(new Set());
   const [isMenuOpen, setIsMenuOpen] = useState(null);
-  const [isLoading, setIsLoading] = useState(false);
   const [userPublications, setUserPublications] = useState(false);
 
   const navigate = useNavigate();
@@ -103,9 +102,10 @@ const Home = () => {
         setPublications(data);
       }
     } catch (error) {
-      if (error.message && error.message !== "No publications found") {
-        toast.error("Error al cargar publicaciones");
-      }
+      console.log(error);
+      // if (error.message && error.message !== "No publications found") {
+      //   toast.error("Error al cargar publicaciones");
+      // }
     } finally {
       setLoadingPublications(false);
     }
@@ -117,6 +117,9 @@ const Home = () => {
       toast.success("Publicación eliminada exitosamente");
       setPublications((prevPublications) =>
         prevPublications.filter((pub) => pub._id !== publicationId)
+      );
+      setUserPublications((prevUserPublications) =>
+        prevUserPublications.filter((pub) => pub._id !== publicationId)
       );
     } catch (error) {
       toast.error("Error al eliminar la publicación");
@@ -292,7 +295,8 @@ const Home = () => {
                   if (!publication) return null;
 
                   const userProfilePicture =
-                    loggedUser?.profilePicture?.url || "/default-profile.png";
+                    loggedUser?.profilePicture?.url ||
+                    "https://i.pinimg.com/564x/13/b4/08/13b408f0ad453542c0d8fa8e62602245.jpg";
                   return (
                     <div
                       key={publication._id}
@@ -338,7 +342,7 @@ const Home = () => {
                 Cargando publicaciones...
               </p>
             ) : filteredPublications.length === 0 ? (
-              <p className="text-center text-lg text-gray-500">
+              <p className="text-center text-lg text-gray-500 ">
                 No hay publicaciones subidas
               </p>
             ) : (
